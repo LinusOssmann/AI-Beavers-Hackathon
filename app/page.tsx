@@ -1,6 +1,6 @@
+import { InstallPrompt } from "@/components/pwa/install-prompt";
 import Image from "next/image";
 import styles from "./page.module.css";
-import { InstallPrompt } from "@/components/pwa/install-prompt";
 
 export default function Home() {
   return (

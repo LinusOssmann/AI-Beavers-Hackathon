@@ -12,7 +12,7 @@ export function ServiceWorkerRegister() {
         })
         .then((registration) => {
           console.log('Service Worker registered:', registration)
-          
+
           // Check for updates
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing
