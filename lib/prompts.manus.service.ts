@@ -150,3 +150,15 @@ export async function getTransportPrompt(plan: Plan) {
   DO NOT create any files. It does not matter what you respond in the end as long as you called the tools enough times with the appropriate inputs.
   `;
 }
+
+export async function getPreferenceRefinerPrompt(preferences: string) {
+  return `
+  You should research the preferences of the user based on the following input:
+
+  ${preferences}
+
+  Please research in a shallow research the things the user has expressed interests in. Only research things that benefit from research, e.g. activities or locations you don't know much about. If the user expressed "liking the outdoors", this is highly unspecific and does not need further research.
+
+  DO NOT create files. Simply respond in natural language with your final summary/assessment.
+  `;
+}
