@@ -4,7 +4,6 @@
  */
 
 import { prisma } from "@/prisma/prisma";
-import { validateLocationPlan } from "./services/utils";
 
 export interface Coordinates {
   latitude: number;
@@ -34,7 +33,7 @@ export interface AccommodationCandidate {
 
 export interface ClarifyingQuestion {
   id: string;
-  travelPlanId: string;
+  locationId: string;
   question: string;
 }
 
@@ -52,15 +51,23 @@ function coordsFromLocation(loc: { latitude: number | null; longitude: number | 
 }
 
 export const travelStore = {
-  async listActivityCandidates(travelPlanId: string): Promise<ActivityCandidate[]> {
+  async listActivityCandidates(locationId: string): Promise<ActivityCandidate[]> {
     const activities = await prisma.activity.findMany({
-      where: { planId: travelPlanId },
+      where: { locationId },
       orderBy: { createdAt: "desc" },
-      include: { location: { select: { latitude: true, longitude: true } } },
+      include: { 
+        location: { 
+          select: { 
+            latitude: true, 
+            longitude: true,
+            planId: true 
+          } 
+        } 
+      },
     });
     return activities.map((a) => ({
       id: a.id,
-      travelPlanId: a.planId,
+      travelPlanId: a.location.planId,
       locationId: a.locationId,
       activityName: a.name,
       activityCoordinates: coordsFromLocation(a.location),
@@ -70,17 +77,23 @@ export const travelStore = {
   },
 
   async addActivityCandidate(
-    travelPlanId: string,
     locationId: string,
     activityName: string,
     _activityCoordinates: Coordinates,
     reason: string,
     priceEstimate: number
   ): Promise<string> {
-    await validateLocationPlan(locationId, travelPlanId);
+    // Validate location exists
+    const location = await prisma.location.findUnique({ 
+      where: { id: locationId },
+      select: { id: true }
+    });
+    if (!location) {
+      throw new Error("Location not found");
+    }
+    
     const activity = await prisma.activity.create({
       data: {
-        planId: travelPlanId,
         locationId,
         name: activityName,
         reason,
@@ -91,15 +104,23 @@ export const travelStore = {
     return activity.id;
   },
 
-  async listAccommodationCandidates(travelPlanId: string): Promise<AccommodationCandidate[]> {
+  async listAccommodationCandidates(locationId: string): Promise<AccommodationCandidate[]> {
     const accommodations = await prisma.accommodation.findMany({
-      where: { planId: travelPlanId },
+      where: { locationId },
       orderBy: { createdAt: "desc" },
-      include: { location: { select: { latitude: true, longitude: true } } },
+      include: { 
+        location: { 
+          select: { 
+            latitude: true, 
+            longitude: true,
+            planId: true 
+          } 
+        } 
+      },
     });
     return accommodations.map((a) => ({
       id: a.id,
-      travelPlanId: a.planId,
+      travelPlanId: a.location.planId,
       locationId: a.locationId,
       accommodationName: a.name,
       accommodationType: a.type ?? "",
@@ -110,7 +131,6 @@ export const travelStore = {
   },
 
   async addAccommodationCandidate(
-    travelPlanId: string,
     locationId: string,
     accommodationName: string,
     accommodationType: string,
@@ -118,10 +138,17 @@ export const travelStore = {
     reason: string,
     priceEstimatePerNight: number
   ): Promise<string> {
-    await validateLocationPlan(locationId, travelPlanId);
+    // Validate location exists
+    const location = await prisma.location.findUnique({ 
+      where: { id: locationId },
+      select: { id: true }
+    });
+    if (!location) {
+      throw new Error("Location not found");
+    }
+    
     const accommodation = await prisma.accommodation.create({
       data: {
-        planId: travelPlanId,
         locationId,
         name: accommodationName,
         type: accommodationType,
@@ -133,9 +160,9 @@ export const travelStore = {
     return accommodation.id;
   },
 
-  addClarifyingQuestion(travelPlanId: string, question: string): string {
+  addClarifyingQuestion(locationId: string, question: string): string {
     const id = nextId();
-    clarifyingQuestions.push({ id, travelPlanId, question });
+    clarifyingQuestions.push({ id, locationId, question });
     return id;
   },
 };

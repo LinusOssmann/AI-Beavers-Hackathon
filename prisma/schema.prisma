@@ -4,17 +4,20 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
-// IMPORTANT: After running migrations, add the following partial unique indexes to enforce
-// "one selected item per plan" constraints. These ensure:
-// - Only one Location can be selected per Plan
-// - Only one Accommodation can be selected per Plan  
-// - Only one Transport can be selected per Plan
-// - Multiple Activities can be selected per Plan (no constraint needed)
+// STAR SCHEMA STRUCTURE:
+// - Plan (dimension) -> n Locations/Destinations (dimension)
+//   Each Location -> n Accommodations, n Activities, n Transports (dimensions)
+// - Dimensions are denormalized (descriptive attributes only)
+// - Measures (price, rating, duration) stored in dimension tables
+// - Hierarchy: Plan (1) -> Location (n) -> Accommodation/Activity/Transport (n each)
 //
-// Run this SQL after migrations:
+// IMPORTANT: After running migrations, add the following partial unique indexes to enforce
+// "one selected item per plan" constraints:
+//
 // CREATE UNIQUE INDEX location_one_selected_per_plan ON location (plan_id) WHERE is_selected = true;
-// CREATE UNIQUE INDEX accommodation_one_selected_per_plan ON accommodation (plan_id) WHERE is_selected = true;
-// CREATE UNIQUE INDEX transport_one_selected_per_plan ON transport (plan_id) WHERE is_selected = true;
+// CREATE UNIQUE INDEX accommodation_one_selected_per_location ON accommodation (location_id) WHERE is_selected = true;
+// CREATE UNIQUE INDEX transport_one_selected_per_location ON transport (location_id) WHERE is_selected = true;
+// Note: Since only one Location can be selected per Plan, one per Location = one per Plan
 
 generator client {
   provider = "prisma-client"
@@ -97,6 +100,7 @@ model Verification {
   @@map("verification")
 }
 
+// DIMENSION: Plan - Top-level plan dimension
 model Plan {
   id            String         @id @default(uuid())
   userId        String
@@ -108,14 +112,12 @@ model Plan {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   locations     Location[]
-  accommodations Accommodation[]
-  activities    Activity[]
-  transports    Transport[]
 
   @@index([userId])
   @@map("plan")
 }
 
+// DIMENSION: Location/Destination - Denormalized location attributes
 model Location {
   id            String         @id @default(uuid())
   planId        String
@@ -138,17 +140,16 @@ model Location {
   @@map("location")
 }
 
+// DIMENSION: Accommodation - Denormalized accommodation attributes
 model Accommodation {
   id          String   @id @default(uuid())
   locationId  String
   location    Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  planId      String
-  plan        Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
   name        String
   type        String?  // e.g., "hotel", "airbnb", "hostel"
   address     String?
-  price       Float?
-  rating      Float?
+  price       Float?   // Measure: cost
+  rating      Float?   // Measure: rating score
   description String?
   checkIn     DateTime?
   checkOut    DateTime?
@@ -157,46 +158,42 @@ model Accommodation {
   updatedAt   DateTime @updatedAt
 
   @@index([locationId])
-  @@index([planId])
-  @@index([planId, isSelected])
+  @@index([locationId, isSelected])
   @@map("accommodation")
 }
 
+// DIMENSION: Activity - Denormalized activity attributes
 model Activity {
   id          String   @id @default(uuid())
   locationId  String
   location    Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  planId      String
-  plan        Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
   name        String
   type        String?  // e.g., "attraction", "restaurant", "tour"
   address     String?
-  price       Float?
-  rating      Float?
+  price       Float?   // Measure: cost
+  rating      Float?   // Measure: rating score
   description String?
   reason      String   // reason why the activity was suggested for the user 
-  duration    Int?     // duration in minutes
+  duration    Int?     // Measure: duration in minutes
   isSelected  Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([locationId])
-  @@index([planId])
-  @@index([planId, isSelected])
+  @@index([locationId, isSelected])
   @@map("activity")
 }
 
+// DIMENSION: Transport - Denormalized transport attributes
 model Transport {
   id          String   @id @default(uuid())
   locationId  String
   location    Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  planId      String
-  plan        Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
   type        String   // e.g., "flight", "train", "bus", "car_rental"
   name        String?
   from        String?
   to          String?
-  price       Float?
+  price       Float?   // Measure: cost
   departure   DateTime?
   arrival     DateTime?
   description String?
@@ -205,7 +202,6 @@ model Transport {
   updatedAt   DateTime @updatedAt
 
   @@index([locationId])
-  @@index([planId])
-  @@index([planId, isSelected])
+  @@index([locationId, isSelected])
   @@map("transport")
 }

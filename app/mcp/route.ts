@@ -21,13 +21,13 @@ const mcpHandler = createMcpHandler(
       {
         title: "List Activity Candidates",
         description:
-          "Returns the current activity candidates for a travel plan, including their IDs.",
+          "Returns the current activity candidates for a location, including their IDs.",
         inputSchema: {
-          travel_plan_id: z.string().min(1),
+          location_id: z.string().min(1),
         },
       },
-      async ({ travel_plan_id }) => {
-        const candidates = await travelStore.listActivityCandidates(travel_plan_id);
+      async ({ location_id }) => {
+        const candidates = await travelStore.listActivityCandidates(location_id);
         const text = JSON.stringify(candidates, null, 2);
         return { content: [{ type: "text", text }] };
       }
@@ -37,9 +37,8 @@ const mcpHandler = createMcpHandler(
       "add_activity_candidate",
       {
         title: "Add Activity Candidate",
-        description: "Adds a single activity candidate to a travel plan. Returns the new candidate ID.",
+        description: "Adds a single activity candidate to a location. Returns the new candidate ID.",
         inputSchema: {
-          travel_plan_id: z.string().min(1),
           location_id: z.string().min(1),
           activity_name: z.string().min(1),
           activity_coordinates: z.object(coordinatesSchema),
@@ -48,7 +47,6 @@ const mcpHandler = createMcpHandler(
         },
       },
       async ({
-        travel_plan_id,
         location_id,
         activity_name,
         activity_coordinates,
@@ -56,7 +54,6 @@ const mcpHandler = createMcpHandler(
         price_estimate,
       }) => {
         const id = await travelStore.addActivityCandidate(
-          travel_plan_id,
           location_id,
           activity_name,
           activity_coordinates,
@@ -72,14 +69,14 @@ const mcpHandler = createMcpHandler(
       {
         title: "List Accommodation Candidates",
         description:
-          "Returns the current accommodation candidates for a travel plan, including their IDs.",
+          "Returns the current accommodation candidates for a location, including their IDs.",
         inputSchema: {
-          travel_plan_id: z.string().min(1),
+          location_id: z.string().min(1),
         },
       },
-      async ({ travel_plan_id }) => {
+      async ({ location_id }) => {
         const candidates =
-          await travelStore.listAccommodationCandidates(travel_plan_id);
+          await travelStore.listAccommodationCandidates(location_id);
         const text = JSON.stringify(candidates, null, 2);
         return { content: [{ type: "text", text }] };
       }
@@ -90,9 +87,8 @@ const mcpHandler = createMcpHandler(
       {
         title: "Add Accommodation Candidate",
         description:
-          "Adds a single accommodation candidate to a travel plan. Returns the new candidate ID.",
+          "Adds a single accommodation candidate to a location. Returns the new candidate ID.",
         inputSchema: {
-          travel_plan_id: z.string().min(1),
           location_id: z.string().min(1),
           accommodation_name: z.string().min(1),
           accommodation_type: z.string().min(1),
@@ -102,7 +98,6 @@ const mcpHandler = createMcpHandler(
         },
       },
       async ({
-        travel_plan_id,
         location_id,
         accommodation_name,
         accommodation_type,
@@ -111,7 +106,6 @@ const mcpHandler = createMcpHandler(
         price_estimate_per_night,
       }) => {
         const id = await travelStore.addAccommodationCandidate(
-          travel_plan_id,
           location_id,
           accommodation_name,
           accommodation_type,
@@ -128,14 +122,14 @@ const mcpHandler = createMcpHandler(
       {
         title: "Add Clarifying Question",
         description:
-          "Adds a clarifying question to a travel plan. The question is saved for later and not answered immediately.",
+          "Adds a clarifying question to a location. The question is saved for later and not answered immediately.",
         inputSchema: {
-          travel_plan_id: z.string().min(1),
+          location_id: z.string().min(1),
           question: z.string().min(1),
         },
       },
-      async ({ travel_plan_id, question }) => {
-        const id = travelStore.addClarifyingQuestion(travel_plan_id, question);
+      async ({ location_id, question }) => {
+        const id = travelStore.addClarifyingQuestion(location_id, question);
         return {
           content: [
             {
