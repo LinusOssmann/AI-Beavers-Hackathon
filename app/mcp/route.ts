@@ -1,6 +1,6 @@
+import { travelStore } from "@/lib/mcp-travel-store";
 import { createMcpHandler } from "mcp-handler";
 import { z } from "zod";
-import { travelStore } from "@/lib/mcp-travel-store";
 
 const CORS_HEADERS: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
@@ -9,204 +9,262 @@ const CORS_HEADERS: Record<string, string> = {
   "Access-Control-Max-Age": "86400",
 };
 
-const coordinatesSchema = {
+const coordinatesSchema = z.object({
   latitude: z.number(),
   longitude: z.number(),
-};
+});
 
-const mcpHandler = createMcpHandler(
+function toolError(message: string) {
+  return {
+    content: [
+      { type: "text" as const, text: JSON.stringify({ error: message }) },
+    ],
+  };
+}
+
+const handler = createMcpHandler(
   (server) => {
     server.registerTool(
-      "list_activity_candidates",
+      "listActivityCandidates",
       {
         title: "List Activity Candidates",
         description:
-          "Returns the current activity candidates for a location, including their IDs.",
+          "This tool returns the current activity candidates for a location, including their IDs.",
         inputSchema: {
-          location_id: z.string().min(1),
+          locationId: z.string().min(1),
         },
       },
-      async ({ location_id }) => {
-        const candidates = await travelStore.listActivityCandidates(location_id);
-        const text = JSON.stringify(candidates, null, 2);
-        return { content: [{ type: "text", text }] };
+      async ({ locationId }) => {
+        try {
+          const candidates = await travelStore.listActivityCandidates(
+            locationId
+          );
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: JSON.stringify(candidates, null, 2),
+              },
+            ],
+          };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          return toolError(message);
+        }
       }
     );
 
     server.registerTool(
-      "add_activity_candidate",
+      "addActivityCandidate",
       {
         title: "Add Activity Candidate",
-        description: "Adds a single activity candidate to a location. Returns the new candidate ID.",
+        description:
+          "Adds a single activity candidate to a location. Returns the new candidate ID.",
         inputSchema: {
-          location_id: z.string().min(1),
-          activity_name: z.string().min(1),
-          activity_coordinates: z.object(coordinatesSchema),
+          locationId: z.string().min(1),
+          activityName: z.string().min(1),
+          activityCoordinates: coordinatesSchema,
           reason: z.string(),
-          price_estimate: z.number(),
+          priceEstimate: z.number(),
         },
       },
       async ({
-        location_id,
-        activity_name,
-        activity_coordinates,
+        locationId,
+        activityName,
+        activityCoordinates,
         reason,
-        price_estimate,
+        priceEstimate,
       }) => {
-        const id = await travelStore.addActivityCandidate(
-          location_id,
-          activity_name,
-          activity_coordinates,
-          reason,
-          price_estimate
-        );
-        return { content: [{ type: "text", text: JSON.stringify({ id }) }] };
+        try {
+          const id = await travelStore.addActivityCandidate(
+            locationId,
+            activityName,
+            {
+              latitude: activityCoordinates.latitude,
+              longitude: activityCoordinates.longitude,
+            },
+            reason,
+            priceEstimate
+          );
+          return {
+            content: [{ type: "text" as const, text: JSON.stringify({ id }) }],
+          };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          return toolError(message);
+        }
       }
     );
 
     server.registerTool(
-      "list_accommodation_candidates",
+      "listAccommodationCandidates",
       {
         title: "List Accommodation Candidates",
         description:
-          "Returns the current accommodation candidates for a location, including their IDs.",
+          "This tool returns the current accommodation candidates for a location, including their IDs.",
         inputSchema: {
-          location_id: z.string().min(1),
+          locationId: z.string().min(1),
         },
       },
-      async ({ location_id }) => {
-        const candidates =
-          await travelStore.listAccommodationCandidates(location_id);
-        const text = JSON.stringify(candidates, null, 2);
-        return { content: [{ type: "text", text }] };
+      async ({ locationId }) => {
+        try {
+          const candidates = await travelStore.listAccommodationCandidates(
+            locationId
+          );
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: JSON.stringify(candidates, null, 2),
+              },
+            ],
+          };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          return toolError(message);
+        }
       }
     );
 
     server.registerTool(
-      "add_accommodation_candidate",
+      "addAccommodationCandidate",
       {
         title: "Add Accommodation Candidate",
         description:
           "Adds a single accommodation candidate to a location. Returns the new candidate ID.",
         inputSchema: {
-          location_id: z.string().min(1),
-          accommodation_name: z.string().min(1),
-          accommodation_type: z.string().min(1),
-          accommodation_coordinates: z.object(coordinatesSchema),
+          locationId: z.string().min(1),
+          accommodationName: z.string().min(1),
+          accommodationType: z.string().min(1),
+          accommodationCoordinates: coordinatesSchema,
           reason: z.string(),
-          price_estimate_per_night: z.number(),
+          priceEstimatePerNight: z.number(),
         },
       },
       async ({
-        location_id,
-        accommodation_name,
-        accommodation_type,
-        accommodation_coordinates,
+        locationId,
+        accommodationName,
+        accommodationType,
+        accommodationCoordinates,
         reason,
-        price_estimate_per_night,
+        priceEstimatePerNight,
       }) => {
-        const id = await travelStore.addAccommodationCandidate(
-          location_id,
-          accommodation_name,
-          accommodation_type,
-          accommodation_coordinates,
-          reason,
-          price_estimate_per_night
-        );
-        return { content: [{ type: "text", text: JSON.stringify({ id }) }] };
+        try {
+          const id = await travelStore.addAccommodationCandidate(
+            locationId,
+            accommodationName,
+            accommodationType,
+            {
+              latitude: accommodationCoordinates.latitude,
+              longitude: accommodationCoordinates.longitude,
+            },
+            reason,
+            priceEstimatePerNight
+          );
+          return {
+            content: [{ type: "text" as const, text: JSON.stringify({ id }) }],
+          };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          return toolError(message);
+        }
       }
     );
 
     server.registerTool(
-      "add_clarifying_question",
+      "addClarifyingQuestion",
       {
         title: "Add Clarifying Question",
         description:
           "Adds a clarifying question to a location. The question is saved for later and not answered immediately.",
         inputSchema: {
-          location_id: z.string().min(1),
+          locationId: z.string().min(1),
           question: z.string().min(1),
         },
       },
-      async ({ location_id, question }) => {
-        const id = travelStore.addClarifyingQuestion(location_id, question);
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify({
-                id,
-                message: "Clarifying question saved for later.",
-              }),
-            },
-          ],
-        };
+      async ({ locationId, question }) => {
+        try {
+          const id = travelStore.addClarifyingQuestion(locationId, question);
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: JSON.stringify({
+                  id,
+                  message: "Clarifying question saved for later.",
+                }),
+              },
+            ],
+          };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          return toolError(message);
+        }
       }
     );
 
     server.registerTool(
-      "add_destination",
+      "addDestination",
       {
         title: "Add Destination",
         description:
           "Adds a destination (location) to a travel plan. Returns the new destination ID.",
         inputSchema: {
-          plan_id: z.string().min(1),
+          planId: z.string().min(1),
           name: z.string().min(1),
           country: z.string().min(1),
           city: z.string().optional(),
-          coordinates: z.object(coordinatesSchema).optional(),
+          coordinates: coordinatesSchema.optional(),
           description: z.string().optional(),
         },
       },
-      async ({
-        plan_id,
-        name,
-        country,
-        city,
-        coordinates,
-        description,
-      }) => {
-        const id = await travelStore.addDestination(
-          plan_id,
-          name,
-          country,
-          city,
-          coordinates,
-          description
-        );
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify({ id }),
-            },
-          ],
-        };
+      async ({ planId, name, country, city, coordinates, description }) => {
+        try {
+          const id = await travelStore.addDestination(
+            planId,
+            name,
+            country,
+            city,
+            coordinates
+              ? {
+                  latitude: coordinates.latitude,
+                  longitude: coordinates.longitude,
+                }
+              : undefined,
+            description
+          );
+          return {
+            content: [{ type: "text" as const, text: JSON.stringify({ id }) }],
+          };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          return toolError(message);
+        }
       }
     );
   },
   {},
   {
-    streamableHttpEndpoint: "/mcp",
+    basePath: "",
     maxDuration: 60,
     verboseLogs: process.env.NODE_ENV === "development",
+    disableSse: true,
   }
 );
 
 async function withCors(
   request: Request,
-  handler: (req: Request) => Promise<Response>
+  fn: (req: Request) => Promise<Response>
 ): Promise<Response> {
-  const response = await handler(request);
-  const newHeaders = new Headers(response.headers);
+  const response = await fn(request);
+  const headers = new Headers(response.headers);
   for (const [key, value] of Object.entries(CORS_HEADERS)) {
-    newHeaders.set(key, value);
+    headers.set(key, value);
   }
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
-    headers: newHeaders,
+    headers,
   });
 }
 
@@ -218,9 +276,9 @@ export async function OPTIONS() {
 }
 
 export async function GET(request: Request) {
-  return withCors(request, mcpHandler);
+  return withCors(request, handler);
 }
 
 export async function POST(request: Request) {
-  return withCors(request, mcpHandler);
+  return withCors(request, handler);
 }
