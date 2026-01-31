@@ -22,7 +22,6 @@ function buildLocationResearcherPrompt(
   destination: string,
   preferences: string,
   preferenceSummary: string,
-  planId: string,
   locationId: string
 ): string {
   return [
