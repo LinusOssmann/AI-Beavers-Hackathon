@@ -1,0 +1,217 @@
+---
+description: Manus API OpenAI SDK compatibility - use the OpenAI SDK with Manus for tasks, file management, multi-turn conversations, and task management. Reference: https://open.manus.im/docs/openai-compatibility
+alwaysApply: false
+---
+
+# Manus API – OpenAI SDK Compatibility
+
+Use the OpenAI SDK with Manus for complex reasoning tasks, document analysis, and multi-step workflows. Manus handles the heavy lifting while you track progress asynchronously. Reference: [OpenAI SDK Compatibility](https://open.manus.im/docs/openai-compatibility).
+
+## Overview
+
+The OpenAI Responses API is a stateful API for long-running tasks that require asynchronous processing. Manus is compatible with the Responses API, so you can use the OpenAI SDK with Manus for automation, research, and complex applications.
+
+### Prerequisites
+
+1. Sign up for a [Manus account](https://manus.im/)
+2. Generate your [API key](https://manus.im/app?show_settings=integrations&app_name=api) from the dashboard
+3. Install Python 3.10+ (for Python SDK) or use the OpenAI-compatible client in your stack
+
+## Installation
+
+**Python:** Install the OpenAI Python SDK (tested up to `1.100.2`):
+
+```bash
+pip install openai==1.100.2
+```
+
+Manus uses API key-based authentication via headers. The `api_key` parameter can be any placeholder; Manus reads the actual key from the `API_KEY` header.
+
+**Python client setup:**
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.manus.im",
+    api_key="**",  # Placeholder; actual key in header
+    default_headers={
+        "API_KEY": "your-api-key"  # Your actual Manus API key
+    },
+)
+```
+
+**TypeScript/JavaScript:** Use the OpenAI SDK with the same base URL and pass the API key in the `API_KEY` header when calling Manus.
+
+## Task statuses
+
+- **running**: Task dispatched; agent is working on the request.
+- **pending**: Agent paused, waiting for more user input (e.g. interactive sessions).
+- **completed**: Task finished successfully; results available.
+- **error**: Task failed.
+
+Poll by calling retrieve until status is no longer `running`. For webhooks, see the [Manus webhooks guide](https://open.manus.im/docs/webhooks).
+
+## Creating a task
+
+Create a task and get a response object with a unique `id` for tracking:
+
+```python
+response = client.responses.create(
+    input=[
+        {
+            "role": "user",
+            "content": [
+                {"type": "input_text", "text": "What's the color of the sky?"},
+            ],
+        }
+    ],
+    extra_body={
+        "task_mode": "agent",
+        "agent_profile": "manus-1.6",
+    },
+)
+
+print(f"Task created: {response.id}")
+print(f"Status: {response.status}")
+print(f"Task URL: {response.metadata.get('task_url')}")
+```
+
+## Polling for completion
+
+Use `responses.retrieve` to check status (e.g. in a loop with a short sleep to avoid spamming the API):
+
+```python
+completed_response = client.responses.retrieve(response_id=task_id)
+
+while completed_response.status == "running":
+    time.sleep(5)
+    task_update = client.responses.retrieve(response_id=task_id)
+    completed_response = task_update
+```
+
+When the loop exits, the task is completed, failed, or pending. The final `Response` object holds the full conversation in the **output** field: a list of `ResponseOutputMessage` objects with `role` (user/assistant) and `content`.
+
+## File management
+
+The Files API lets you manage uploads separately from task creation (reuse or pre-upload large files).
+
+### Uploading files
+
+1. Create a file record to get an upload URL.
+2. Upload the file to that URL (PUT).
+
+Presigned upload URL expires in **3 minutes**. Uploaded files are auto-deleted after **48 hours**; reference them in tasks before expiry or delete manually via the Files API.
+
+```python
+# Step 1: Create file record and get upload URL
+file_record = client.post("/files", body={"filename": "berkshire_letter_2024.pdf"}, cast_to=FileCreate)
+# Step 2: Upload file to file_record.upload_url (e.g. requests.put)
+```
+
+### File status
+
+- **pending**: Record created, upload not done.
+- **uploaded**: Ready to use in tasks.
+- **deleted**: Removed manually or after 48 hours.
+
+### Files API operations
+
+- **Retrieve:** `client.files.retrieve(file_id="file-abc123xyz")`
+- **List:** `client.files.list()`
+- **Delete:** `client.files.delete(file_id="file-abc123xyz")`
+
+## Working with content
+
+### Text input
+
+Use `input_text` for simple text tasks:
+
+```python
+response = client.responses.create(
+    input=[{"role": "user", "content": [{"type": "input_text", "text": "Explain quantum computing in simple terms."}]}],
+    extra_body={"task_mode": "agent", "agent_profile": "manus-1.6"},
+)
+```
+
+### Files in tasks
+
+- **By file_id (pre-uploaded):** `{"type": "input_file", "file_id": "file-abc123xyz"}`
+- **By public URL:** `{"type": "input_file", "file_url": "https://example.com/document.pdf"}`
+- **Base64:** `{"type": "input_file", "filename": "document.pdf", "file_data": "data:application/pdf;base64,..."}`
+
+Supported: PDF, DOCX, TXT, MD, CSV, XLSX, JSON, YAML, Python, JavaScript, and more. For base64, use the correct MIME prefix (e.g. `data:application/pdf;base64,`).
+
+### Images
+
+- **Public URL:** `{"type": "input_image", "image_url": "https://example.com/image.jpg"}`
+- **Base64:** `{"type": "input_image", "image_url": "data:image/jpeg;base64,..."}`
+
+Supported: PNG, JPEG/JPG, GIF, WebP. Use `image_url` for both URL and base64.
+
+## Multi-turn conversations
+
+Link follow-up requests with `previous_response_id` or `task_id` in `extra_body`. The agent keeps context, files, and intermediate results across turns.
+
+**Using previous_response_id:**
+
+```python
+followup = client.responses.create(
+    input=[{"role": "user", "content": [{"type": "input_text", "text": "What does the data suggest about Q4 trends?"}]}],
+    previous_response_id=response_id,
+    extra_body={"task_mode": "agent", "agent_profile": "manus-1.6"},
+)
+```
+
+**Using task_id in extra_body:** Put `"task_id": response_id` in `extra_body` instead. Use **either** `previous_response_id` **or** `task_id`, not both.
+
+## Projects
+
+Assign a task to a project so the project’s instruction is applied:
+
+```python
+extra_body={
+    "task_mode": "agent",
+    "agent_profile": "manus-1.6",
+    "project_id": "proj_abc123",
+}
+```
+
+Create and manage projects via the [Projects API](https://open.manus.im/docs/api-reference/create-project).
+
+## Task management
+
+- **List all tasks:** `client.get("/v1/tasks", cast_to=object)` — returns all tasks (including from the Manus webapp).
+- **Filter by status:** `GET /v1/tasks?status=completed&status=running&limit=50`
+- **Search:** `GET /v1/tasks?query=financial%20analysis&limit=20`
+- **By date:** `GET /v1/tasks?created_after={unix_ts}&limit=50`
+
+Response: `data` (task list), `first_id`, `last_id`, `has_more`.
+
+### Pagination
+
+- Use `after` with `last_id` for the next page. `order=desc` (newest first), `order=asc` (oldest first).
+- Parameters: `limit` (1–1000, default 100), `after`, `order`, `order_by` (`created_at` or `updated_at`), `query`, `status`, `created_after`, `created_before`.
+
+### Deleting tasks
+
+- `client.responses.delete(response_id="task_id_here")` — permanently removes the task. Save important outputs first.
+
+### Updating tasks
+
+- `client.put("/v1/tasks/task_id_here", options={...})` with `extra_body` e.g. `enable_shared`, `enable_visible_in_task_list`, `title`.
+
+## Sharing and visibility
+
+- **Public shareable link:** In `extra_body` set `"create_shareable_link": True`. Get `share_url` and `task_url` from `response.metadata`. Only use for non-sensitive content.
+- **Hide from task list:** `"hide_in_task_list": True` in `extra_body` (e.g. for automation). Task still reachable via direct URL.
+
+## Best practices
+
+**Workspace:** Delete completed tasks you don’t need; use `hide_in_task_list` for automated workflows; save important outputs before deleting.
+
+**Security:** Enable `create_shareable_link` only for non-sensitive tasks; use environment variables for API keys in production.
+
+**Performance:** Use agent profiles appropriately (`manus-1.6-lite` for simple, `manus-1.6` for general, `manus-1.6-max` for complex); avoid constant polling; batch similar tasks when possible.
+
+**Error handling:** Check task status before using results; handle failed tasks in app logic; keep task IDs for debugging and monitoring.
