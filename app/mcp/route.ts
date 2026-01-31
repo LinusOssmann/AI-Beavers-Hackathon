@@ -1,4 +1,7 @@
 import { travelStore } from "@/lib/mcp-travel-store";
+import * as accommodationService from "@/lib/services/accommodation.service";
+import * as activityService from "@/lib/services/activity.service";
+import * as locationService from "@/lib/services/location.service";
 import { createMcpHandler } from "mcp-handler";
 import { z } from "zod";
 
@@ -36,7 +39,7 @@ const handler = createMcpHandler(
       },
       async ({ locationId }) => {
         try {
-          const candidates = await travelStore.listActivityCandidates(
+          const candidates = await activityService.listActivitiesByLocation(
             locationId
           );
           return {
@@ -68,21 +71,11 @@ const handler = createMcpHandler(
           priceEstimate: z.number(),
         },
       },
-      async ({
-        locationId,
-        activityName,
-        activityCoordinates,
-        reason,
-        priceEstimate,
-      }) => {
+      async ({ locationId, activityName, reason, priceEstimate }) => {
         try {
-          const id = await travelStore.addActivityCandidate(
+          const id = await activityService.createActivity(
             locationId,
             activityName,
-            {
-              latitude: activityCoordinates.latitude,
-              longitude: activityCoordinates.longitude,
-            },
             reason,
             priceEstimate
           );
@@ -108,9 +101,8 @@ const handler = createMcpHandler(
       },
       async ({ locationId }) => {
         try {
-          const candidates = await travelStore.listAccommodationCandidates(
-            locationId
-          );
+          const candidates =
+            await accommodationService.listAccommodationsByLocation(locationId);
           return {
             content: [
               {
@@ -145,19 +137,14 @@ const handler = createMcpHandler(
         locationId,
         accommodationName,
         accommodationType,
-        accommodationCoordinates,
         reason,
         priceEstimatePerNight,
       }) => {
         try {
-          const id = await travelStore.addAccommodationCandidate(
+          const id = await accommodationService.createAccommodation(
             locationId,
             accommodationName,
             accommodationType,
-            {
-              latitude: accommodationCoordinates.latitude,
-              longitude: accommodationCoordinates.longitude,
-            },
             reason,
             priceEstimatePerNight
           );
@@ -220,18 +207,18 @@ const handler = createMcpHandler(
       },
       async ({ planId, name, country, city, coordinates, description }) => {
         try {
-          const id = await travelStore.addDestination(
+          const id = await locationService.createLocation(
             planId,
             name,
             country,
-            city,
+            city ?? null,
             coordinates
               ? {
                   latitude: coordinates.latitude,
                   longitude: coordinates.longitude,
                 }
-              : undefined,
-            description
+              : null,
+            description ?? null
           );
           return {
             content: [{ type: "text" as const, text: JSON.stringify({ id }) }],
