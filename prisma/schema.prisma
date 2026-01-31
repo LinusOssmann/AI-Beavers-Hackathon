@@ -4,6 +4,18 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
+// IMPORTANT: After running migrations, add the following partial unique indexes to enforce
+// "one selected item per plan" constraints. These ensure:
+// - Only one Location can be selected per Plan
+// - Only one Accommodation can be selected per Plan  
+// - Only one Transport can be selected per Plan
+// - Multiple Activities can be selected per Plan (no constraint needed)
+//
+// Run this SQL after migrations:
+// CREATE UNIQUE INDEX location_one_selected_per_plan ON location (plan_id) WHERE is_selected = true;
+// CREATE UNIQUE INDEX accommodation_one_selected_per_plan ON accommodation (plan_id) WHERE is_selected = true;
+// CREATE UNIQUE INDEX transport_one_selected_per_plan ON transport (plan_id) WHERE is_selected = true;
+
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -14,15 +26,16 @@ datasource db {
 }
 
 model User {
-  id            String    @id
+  id            String       @id
   name          String
   email         String
-  emailVerified Boolean   @default(false)
+  emailVerified Boolean      @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   sessions      Session[]
   accounts      Account[]
+  plans         Plan[]
 
   @@unique([email])
   @@map("user")
@@ -74,4 +87,116 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+model Plan {
+  id            String         @id @default(uuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  startDate     DateTime?
+  endDate       DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  locations     Location[]
+  accommodations Accommodation[]
+  activities    Activity[]
+  transports    Transport[]
+
+  @@index([userId])
+  @@map("plan")
+}
+
+model Location {
+  id            String         @id @default(uuid())
+  planId        String
+  plan          Plan           @relation(fields: [planId], references: [id], onDelete: Cascade)
+  name          String
+  city          String?
+  country       String
+  latitude      Float?
+  longitude     Float?
+  description   String?
+  isSelected    Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  accommodations Accommodation[]
+  activities    Activity[]
+  transports    Transport[]
+
+  @@index([planId])
+  @@index([planId, isSelected])
+  @@map("location")
+}
+
+model Accommodation {
+  id          String   @id @default(uuid())
+  locationId  String
+  location    Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  planId      String
+  plan        Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  name        String
+  type        String?  // e.g., "hotel", "airbnb", "hostel"
+  address     String?
+  price       Float?
+  rating      Float?
+  description String?
+  checkIn     DateTime?
+  checkOut    DateTime?
+  isSelected  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([locationId])
+  @@index([planId])
+  @@index([planId, isSelected])
+  @@map("accommodation")
+}
+
+model Activity {
+  id          String   @id @default(uuid())
+  locationId  String
+  location    Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  planId      String
+  plan        Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  name        String
+  type        String?  // e.g., "attraction", "restaurant", "tour"
+  address     String?
+  price       Float?
+  rating      Float?
+  description String?
+  duration    Int?     // duration in minutes
+  isSelected  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([locationId])
+  @@index([planId])
+  @@index([planId, isSelected])
+  @@map("activity")
+}
+
+model Transport {
+  id          String   @id @default(uuid())
+  locationId  String
+  location    Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  planId      String
+  plan        Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  type        String   // e.g., "flight", "train", "bus", "car_rental"
+  name        String?
+  from        String?
+  to          String?
+  price       Float?
+  departure   DateTime?
+  arrival     DateTime?
+  description String?
+  isSelected  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([locationId])
+  @@index([planId])
+  @@index([planId, isSelected])
+  @@map("transport")
 }
