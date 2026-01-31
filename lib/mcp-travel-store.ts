@@ -1,9 +1,6 @@
-/**
- * MCP travel tools store backed by Prisma.
- * Activities and accommodations are persisted; clarifying questions remain in-memory (no DB model).
- */
-
-import { prisma } from "@/prisma/prisma";
+import * as accommodationService from "@/lib/services/accommodation.service";
+import * as activityService from "@/lib/services/activity.service";
+import * as locationService from "@/lib/services/location.service";
 
 export interface Coordinates {
   latitude: number;
@@ -54,37 +51,11 @@ function nextId(): string {
   return crypto.randomUUID();
 }
 
-function coordsFromLocation(loc: { latitude: number | null; longitude: number | null } | null): Coordinates {
-  if (!loc || loc.latitude == null || loc.longitude == null) {
-    return { latitude: 0, longitude: 0 };
-  }
-  return { latitude: loc.latitude, longitude: loc.longitude };
-}
-
 export const travelStore = {
-  async listActivityCandidates(locationId: string): Promise<ActivityCandidate[]> {
-    const activities = await prisma.activity.findMany({
-      where: { locationId },
-      orderBy: { createdAt: "desc" },
-      include: { 
-        location: { 
-          select: { 
-            latitude: true, 
-            longitude: true,
-            planId: true 
-          } 
-        } 
-      },
-    });
-    return activities.map((a) => ({
-      id: a.id,
-      travelPlanId: a.location.planId,
-      locationId: a.locationId,
-      activityName: a.name,
-      activityCoordinates: coordsFromLocation(a.location),
-      reason: a.reason,
-      priceEstimate: a.price ?? 0,
-    }));
+  async listActivityCandidates(
+    locationId: string
+  ): Promise<ActivityCandidate[]> {
+    return activityService.listActivitiesByLocation(locationId);
   },
 
   async addActivityCandidate(
@@ -94,51 +65,18 @@ export const travelStore = {
     reason: string,
     priceEstimate: number
   ): Promise<string> {
-    // Validate location exists
-    const location = await prisma.location.findUnique({ 
-      where: { id: locationId },
-      select: { id: true }
-    });
-    if (!location) {
-      throw new Error("Location not found");
-    }
-    
-    const activity = await prisma.activity.create({
-      data: {
-        locationId,
-        name: activityName,
-        reason,
-        price: priceEstimate,
-        isSelected: false,
-      },
-    });
-    return activity.id;
+    return activityService.createActivity(
+      locationId,
+      activityName,
+      reason,
+      priceEstimate
+    );
   },
 
-  async listAccommodationCandidates(locationId: string): Promise<AccommodationCandidate[]> {
-    const accommodations = await prisma.accommodation.findMany({
-      where: { locationId },
-      orderBy: { createdAt: "desc" },
-      include: { 
-        location: { 
-          select: { 
-            latitude: true, 
-            longitude: true,
-            planId: true 
-          } 
-        } 
-      },
-    });
-    return accommodations.map((a) => ({
-      id: a.id,
-      travelPlanId: a.location.planId,
-      locationId: a.locationId,
-      accommodationName: a.name,
-      accommodationType: a.type ?? "",
-      accommodationCoordinates: coordsFromLocation(a.location),
-      reason: a.description ?? "",
-      priceEstimatePerNight: a.price ?? 0,
-    }));
+  async listAccommodationCandidates(
+    locationId: string
+  ): Promise<AccommodationCandidate[]> {
+    return accommodationService.listAccommodationsByLocation(locationId);
   },
 
   async addAccommodationCandidate(
@@ -149,26 +87,13 @@ export const travelStore = {
     reason: string,
     priceEstimatePerNight: number
   ): Promise<string> {
-    // Validate location exists
-    const location = await prisma.location.findUnique({ 
-      where: { id: locationId },
-      select: { id: true }
-    });
-    if (!location) {
-      throw new Error("Location not found");
-    }
-    
-    const accommodation = await prisma.accommodation.create({
-      data: {
-        locationId,
-        name: accommodationName,
-        type: accommodationType,
-        description: reason,
-        price: priceEstimatePerNight,
-        isSelected: false,
-      },
-    });
-    return accommodation.id;
+    return accommodationService.createAccommodation(
+      locationId,
+      accommodationName,
+      accommodationType,
+      reason,
+      priceEstimatePerNight
+    );
   },
 
   addClarifyingQuestion(locationId: string, question: string): string {
@@ -185,27 +110,13 @@ export const travelStore = {
     coordinates?: Coordinates,
     description?: string
   ): Promise<string> {
-    // Validate plan exists
-    const plan = await prisma.plan.findUnique({ 
-      where: { id: planId },
-      select: { id: true }
-    });
-    if (!plan) {
-      throw new Error("Plan not found");
-    }
-    
-    const location = await prisma.location.create({
-      data: {
-        planId,
-        name,
-        country,
-        city: city ?? null,
-        latitude: coordinates?.latitude ?? null,
-        longitude: coordinates?.longitude ?? null,
-        description: description ?? null,
-        isSelected: false,
-      },
-    });
-    return location.id;
+    return locationService.createLocation(
+      planId,
+      name,
+      country,
+      city ?? null,
+      coordinates ?? null,
+      description ?? null
+    );
   },
 };

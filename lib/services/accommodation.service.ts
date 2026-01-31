@@ -1,5 +1,71 @@
 import { prisma } from "@/prisma/prisma";
 
+export interface AccommodationListItem {
+  id: string;
+  travelPlanId: string;
+  locationId: string;
+  accommodationName: string;
+  accommodationType: string;
+  accommodationCoordinates: { latitude: number; longitude: number };
+  reason: string;
+  priceEstimatePerNight: number;
+}
+
+export async function listAccommodationsByLocation(
+  locationId: string
+): Promise<AccommodationListItem[]> {
+  const accommodations = await prisma.accommodation.findMany({
+    where: { locationId },
+    orderBy: { createdAt: "desc" },
+    include: {
+      location: {
+        select: { planId: true, latitude: true, longitude: true },
+      },
+    },
+  });
+  return accommodations.map((a) => ({
+    id: a.id,
+    travelPlanId: a.location.planId,
+    locationId: a.locationId,
+    accommodationName: a.name,
+    accommodationType: a.type ?? "",
+    accommodationCoordinates: {
+      latitude: a.location.latitude ?? 0,
+      longitude: a.location.longitude ?? 0,
+    },
+    reason: a.description ?? "",
+    priceEstimatePerNight: a.price ?? 0,
+  }));
+}
+
+export async function createAccommodation(
+  locationId: string,
+  accommodationName: string,
+  accommodationType: string,
+  reason: string,
+  priceEstimatePerNight: number
+): Promise<string> {
+  const location = await prisma.location.findUnique({
+    where: { id: locationId },
+    select: { id: true, planId: true },
+  });
+  if (!location) {
+    throw new Error("The location wasn't found.");
+  }
+  const accommodation = await prisma.accommodation.create({
+    data: {
+      plan: { connect: { id: location.planId } },
+      location: { connect: { id: locationId } },
+      name: accommodationName,
+      type: accommodationType,
+      description: reason,
+      price: priceEstimatePerNight,
+      isSelected: false,
+    },
+  });
+  return accommodation.id;
+}
+
 export async function selectAccommodation(
   planId: string,
   accommodationId: string,
