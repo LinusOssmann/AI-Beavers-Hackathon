@@ -2,91 +2,97 @@ import { prisma } from "@/prisma/prisma";
 import { filterUndefined, handlePrismaError } from "./utils";
 
 interface GetUsersParams {
-  email?: string;
-  limit?: number;
-  offset?: number;
+	userId?: string | null; // null/undefined = system access, string = user access (self only)
+	email?: string;
+	limit?: number;
+	offset?: number;
 }
 
 interface CreateUserData {
-  id: string;
-  name: string;
-  email: string;
-  emailVerified?: boolean;
-  image?: string | null;
+	id: string;
+	name: string;
+	email: string;
+	emailVerified?: boolean;
+	image?: string | null;
 }
 
 interface UpdateUserData {
-  name?: string;
-  email?: string;
-  emailVerified?: boolean;
-  image?: string | null;
+	name?: string;
+	email?: string;
+	emailVerified?: boolean;
+	image?: string | null;
 }
 
 export class UserService {
-  static async getUsers(params: GetUsersParams) {
-    const { email, limit, offset } = params;
+	static async getUsers(params: GetUsersParams) {
+		const { userId, email, limit, offset } = params;
 
-    const where = email
-      ? { email: { contains: email, mode: "insensitive" as const } }
-      : {};
+		let where: Record<string, any> = {};
 
-    const [users, total] = await Promise.all([
-      prisma.user.findMany({
-        where,
-        take: limit,
-        skip: offset,
-        orderBy: { createdAt: "desc" },
-      }),
-      prisma.user.count({ where }),
-    ]);
+		// If userId provided (not null), only return that specific user
+		if (userId !== null && userId !== undefined) {
+			where.id = userId;
+		} else if (email) {
+			where.email = { contains: email, mode: "insensitive" as const };
+		}
 
-    return { users, total };
-  }
+		const [users, total] = await Promise.all([
+			prisma.user.findMany({
+				where,
+				take: limit,
+				skip: offset,
+				orderBy: { createdAt: "desc" },
+			}),
+			prisma.user.count({ where }),
+		]);
 
-  static async getUserById(id: string) {
-    const user = await prisma.user.findUnique({ where: { id } });
-    if (!user) throw new Error("User not found");
-    return user;
-  }
+		return { users, total };
+	}
 
-  static async createUser(data: CreateUserData) {
-    try {
-      return await prisma.user.create({
-        data: {
-          id: data.id,
-          name: data.name,
-          email: data.email,
-          emailVerified: data.emailVerified ?? false,
-          image: data.image ?? null,
-        },
-      });
-    } catch (error: any) {
-      if (error.code === "P2002") {
-        throw new Error("User with this email already exists");
-      }
-      throw error;
-    }
-  }
+	static async getUserById(id: string) {
+		const user = await prisma.user.findUnique({ where: { id } });
+		if (!user) throw new Error("User not found");
+		return user;
+	}
 
-  static async updateUser(id: string, data: UpdateUserData) {
-    try {
-      return await prisma.user.update({
-        where: { id },
-        data: filterUndefined(data),
-      });
-    } catch (error: any) {
-      if (error.code === "P2002") {
-        throw new Error("User with this email already exists");
-      }
-      handlePrismaError(error, "User not found");
-    }
-  }
+	static async createUser(data: CreateUserData) {
+		try {
+			return await prisma.user.create({
+				data: {
+					id: data.id,
+					name: data.name,
+					email: data.email,
+					emailVerified: data.emailVerified ?? false,
+					image: data.image ?? null,
+				},
+			});
+		} catch (error: any) {
+			if (error.code === "P2002") {
+				throw new Error("User with this email already exists");
+			}
+			throw error;
+		}
+	}
 
-  static async deleteUser(id: string) {
-    try {
-      await prisma.user.delete({ where: { id } });
-    } catch (error: any) {
-      handlePrismaError(error, "User not found");
-    }
-  }
+	static async updateUser(id: string, data: UpdateUserData) {
+		try {
+			return await prisma.user.update({
+				where: { id },
+				data: filterUndefined(data),
+			});
+		} catch (error: any) {
+			if (error.code === "P2002") {
+				throw new Error("User with this email already exists");
+			}
+			handlePrismaError(error, "User not found");
+		}
+	}
+
+	static async deleteUser(id: string) {
+		try {
+			await prisma.user.delete({ where: { id } });
+		} catch (error: any) {
+			handlePrismaError(error, "User not found");
+		}
+	}
 }

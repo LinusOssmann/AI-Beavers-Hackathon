@@ -11,7 +11,7 @@ export default async function DashboardPage() {
 	});
 
 	if (!session) {
-		redirect("/");
+		redirect("/sign-in");
 	}
 
 	const user = await prisma.user.findUnique({

@@ -1,54 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
 import { UserService } from "@/lib/services/user.service";
+import { authenticateRequest, unauthorizedResponse } from "@/lib/auth-utils";
 
 export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = request.nextUrl;
-    const email = searchParams.get("email");
-    const limit = searchParams.get("limit");
-    const offset = searchParams.get("offset");
+	try {
+		const authResult = await authenticateRequest(request);
 
-    const result = await UserService.getUsers({
-      email: email ?? undefined,
-      limit: limit ? Number(limit) : undefined,
-      offset: offset ? Number(offset) : undefined,
-    });
+		if (!authResult.isAuthenticated) {
+			return unauthorizedResponse();
+		}
 
-    return NextResponse.json({ data: result.users, total: result.total });
-  } catch (error) {
-    console.error("Error fetching users:", error);
-    return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
-  }
+		const { searchParams } = request.nextUrl;
+		const email = searchParams.get("email");
+		const limit = searchParams.get("limit");
+		const offset = searchParams.get("offset");
+
+		// If system access (API key), return all users
+		// If user access (session), return only the authenticated user
+		const result = await UserService.getUsers({
+			userId: authResult.userId, // null for system, userId for user (self only)
+			email: email ?? undefined,
+			limit: limit ? Number(limit) : undefined,
+			offset: offset ? Number(offset) : undefined,
+		});
+
+		return NextResponse.json({ data: result.users, total: result.total });
+	} catch (error) {
+		console.error("Error fetching users:", error);
+		return NextResponse.json(
+			{ error: "Failed to fetch users" },
+			{ status: 500 },
+		);
+	}
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const { id, name, email, emailVerified, image } = await request.json();
-
-    if (!id || !name || !email) {
-      return NextResponse.json(
-        { error: "Missing required fields: id, name, email" },
-        { status: 400 }
-      );
-    }
-
-    const user = await UserService.createUser({
-      id,
-      name,
-      email,
-      emailVerified,
-      image,
-    });
-
-    return NextResponse.json({ data: user }, { status: 201 });
-  } catch (error: any) {
-    if (error.message === "User with this email already exists") {
-      return NextResponse.json(
-        { error: "User with this email already exists" },
-        { status: 409 }
-      );
-    }
-    console.error("Error creating user:", error);
-    return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
-  }
-}
+// POST removed - users are created via Better Auth registration
+// Keeping this endpoint would bypass authentication security

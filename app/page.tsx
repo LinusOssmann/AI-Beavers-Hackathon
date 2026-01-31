@@ -1,29 +1,9 @@
-"use client";
-
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { AuthDialog } from "@/components/auth/auth-dialog";
 import { Compass, Map, Sparkles } from "lucide-react";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
+import Link from "next/link";
 
 export default function LandingPage() {
-	const [authDialogOpen, setAuthDialogOpen] = useState(false);
-	const [authMode, setAuthMode] = useState<"signin" | "signup">("signup");
-
-	const openSignUp = () => {
-		setAuthMode("signup");
-		setAuthDialogOpen(true);
-	};
-
-	const openSignIn = () => {
-		setAuthMode("signin");
-		setAuthDialogOpen(true);
-	};
-
-	const toggleAuthMode = () => {
-		setAuthMode((prev) => (prev === "signin" ? "signup" : "signin"));
-	};
-
 	return (
 		<div className="min-h-screen bg-background flex flex-col">
 			{/* Header */}
@@ -33,8 +13,8 @@ export default function LandingPage() {
 						<Compass className="w-6 h-6" />
 						<h1 className="text-xl font-semibold">TripMatch</h1>
 					</div>
-					<Button variant="ghost" onClick={openSignIn}>
-						Sign In
+					<Button variant="ghost" asChild>
+						<Link href="/sign-in">Sign In</Link>
 					</Button>
 				</div>
 			</header>
@@ -54,20 +34,16 @@ export default function LandingPage() {
 					</div>
 
 					<div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-						<Button
-							size="lg"
-							onClick={openSignUp}
-							className="text-lg"
-						>
-							Get Started
+						<Button size="lg" className="text-lg" asChild>
+							<Link href="/sign-up">Get Started</Link>
 						</Button>
 						<Button
 							size="lg"
 							variant="outline"
-							onClick={openSignIn}
 							className="text-lg"
+							asChild
 						>
-							Sign In
+							<Link href="/sign-in">Sign In</Link>
 						</Button>
 					</div>
 				</div>
@@ -116,14 +92,6 @@ export default function LandingPage() {
 					</div>
 				</div>
 			</main>
-
-			{/* Auth Dialog */}
-			<AuthDialog
-				mode={authMode}
-				isOpen={authDialogOpen}
-				onClose={() => setAuthDialogOpen(false)}
-				onToggleMode={toggleAuthMode}
-			/>
 		</div>
 	);
 }
