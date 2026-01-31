@@ -1,6 +1,6 @@
 import getBody from "@/app/api/lib/getBody";
 import { selectAccommodationSchema } from "@/app/api/routes.schemas";
-import { prisma } from "@/prisma/prisma";
+import { selectAccommodation } from "@/lib/services/accommodation.service";
 import { NextResponse } from "next/server";
 
 export async function POST(
@@ -15,26 +15,13 @@ export async function POST(
 
     const { accommodationId } = body;
 
-    const accommodation = await prisma.accommodation.findFirst({
-      where: { id: accommodationId, planId },
-    });
-    if (!accommodation) {
+    const ok = await selectAccommodation(planId, accommodationId);
+    if (!ok) {
       return NextResponse.json(
         { error: "This accommodation wasn't found for this plan." },
         { status: 404 }
       );
     }
-
-    await prisma.$transaction([
-      prisma.accommodation.updateMany({
-        where: { planId },
-        data: { isSelected: false },
-      }),
-      prisma.accommodation.update({
-        where: { id: accommodationId },
-        data: { isSelected: true },
-      }),
-    ]);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return NextResponse.json(
