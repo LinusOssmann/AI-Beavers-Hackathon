@@ -20,6 +20,7 @@ You are an expert in TypeScript, Node.js, Next.js App Router, React, Shadcn UI, 
 ## TypeScript & Node.js
 
 ### Type Safety
+
 - Use strict TypeScript configuration (`strict: true`)
 - Prefer `interface` over `type` for object shapes
 - Avoid `any`; use `unknown` when type is truly unknown
@@ -28,23 +29,24 @@ You are an expert in TypeScript, Node.js, Next.js App Router, React, Shadcn UI, 
 ```typescript
 // ✅ GOOD - Simple, type-safe
 interface User {
-  id: string
-  email: string
-  name: string
+  id: string;
+  email: string;
+  name: string;
 }
 
 function isValidUser(data: unknown): data is User {
   return (
-    typeof data === 'object' &&
+    typeof data === "object" &&
     data !== null &&
-    'id' in data &&
-    'email' in data &&
-    'name' in data
-  )
+    "id" in data &&
+    "email" in data &&
+    "name" in data
+  );
 }
 ```
 
 ### Code Organization
+
 - Use functional programming patterns; avoid classes
 - Keep functions focused and single-purpose
 - Use descriptive variable names with auxiliary verbs (e.g., `isLoading`, `hasError`)
@@ -53,6 +55,7 @@ function isValidUser(data: unknown): data is User {
 ## Next.js App Router
 
 ### Server Components First
+
 - Default to Server Components; use `'use client'` only when necessary
 - Use Server Actions for mutations instead of API routes when possible
 - Leverage React Server Components for data fetching
@@ -60,26 +63,28 @@ function isValidUser(data: unknown): data is User {
 
 ```typescript
 // ✅ GOOD - Simple server component
-import { cache } from 'react'
-import { db } from '@/lib/db'
+import { cache } from "react";
+import { db } from "@/lib/db";
 
 const getUser = cache(async (id: string) => {
-  return await db.user.findOne({ where: { id } })
-})
+  return await db.user.findOne({ where: { id } });
+});
 
 export default async function UserPage({ params }: { params: { id: string } }) {
-  const user = await getUser(params.id)
-  return <div>{user.name}</div>
+  const user = await getUser(params.id);
+  return <div>{user.name}</div>;
 }
 ```
 
 ### Performance
+
 - Minimize `useEffect` and `useState`; prefer Server Components
 - Use dynamic imports for non-critical components
 - Wrap client components in Suspense with fallback
 - Optimize images: WebP format, size data, lazy loading
 
 ### Routing
+
 - Use `nuqs` for URL search parameter state management
 - Keep route structure flat and intuitive
 - Use route groups for organization without affecting URLs
@@ -87,6 +92,7 @@ export default async function UserPage({ params }: { params: { id: string } }) {
 ## React Patterns
 
 ### Component Design
+
 - Use functional components exclusively
 - Keep components small and focused
 - Extract custom hooks for reusable logic
@@ -95,24 +101,26 @@ export default async function UserPage({ params }: { params: { id: string } }) {
 ```typescript
 // ✅ GOOD - Simple, composable component
 interface ButtonProps {
-  children: React.ReactNode
-  onClick?: () => void
-  variant?: 'primary' | 'secondary'
+  children: React.ReactNode;
+  onClick?: () => void;
+  variant?: "primary" | "secondary";
 }
 
-export function Button({ children, onClick, variant = 'primary' }: ButtonProps) {
+export function Button({
+  children,
+  onClick,
+  variant = "primary",
+}: ButtonProps) {
   return (
-    <button
-      onClick={onClick}
-      className={cn('btn', `btn-${variant}`)}
-    >
+    <button onClick={onClick} className={cn("btn", `btn-${variant}`)}>
       {children}
     </button>
-  )
+  );
 }
 ```
 
 ### State Management
+
 - Use React Server Components for server state
 - Use `useState` for local component state
 - Use `useTransition` for non-urgent updates
@@ -121,6 +129,7 @@ export function Button({ children, onClick, variant = 'primary' }: ButtonProps) 
 ## Shadcn UI
 
 ### Component Usage
+
 - Use Shadcn UI components as building blocks
 - Customize via CSS variables and Tailwind classes
 - Keep component variants minimal and purposeful
@@ -128,8 +137,8 @@ export function Button({ children, onClick, variant = 'primary' }: ButtonProps) 
 
 ```typescript
 // ✅ GOOD - Simple Shadcn usage
-import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 export function UserCard({ user }: { user: User }) {
   return (
@@ -141,11 +150,12 @@ export function UserCard({ user }: { user: User }) {
         <Button variant="outline">View Profile</Button>
       </CardContent>
     </Card>
-  )
+  );
 }
 ```
 
 ### Styling
+
 - Use Tailwind CSS utility classes
 - Leverage CSS variables for theming
 - Keep custom CSS minimal
@@ -154,6 +164,7 @@ export function UserCard({ user }: { user: User }) {
 ## TypeORM with Neon PostgreSQL
 
 ### Database Configuration
+
 - Use connection pooling for Neon serverless
 - Configure TypeORM DataSource in a separate module
 - Use environment variables for connection strings
@@ -161,22 +172,23 @@ export function UserCard({ user }: { user: User }) {
 
 ```typescript
 // ✅ GOOD - Simple TypeORM setup
-import { DataSource } from 'typeorm'
-import { User } from './entities/User'
+import { DataSource } from "typeorm";
+import { User } from "./entities/User";
 
 export const AppDataSource = new DataSource({
-  type: 'postgres',
+  type: "postgres",
   url: process.env.DATABASE_URL,
   entities: [User],
   synchronize: false, // Use migrations in production
-  logging: process.env.NODE_ENV === 'development',
+  logging: process.env.NODE_ENV === "development",
   extra: {
     max: 10, // Connection pool size
   },
-})
+});
 ```
 
 ### Entity Design
+
 - Keep entities simple and focused
 - Use decorators for clear, declarative definitions
 - Avoid deep nesting; normalize data appropriately
@@ -184,25 +196,31 @@ export const AppDataSource = new DataSource({
 
 ```typescript
 // ✅ GOOD - Simple entity
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm'
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+} from "typeorm";
 
-@Entity('users')
+@Entity("users")
 export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id: string
+  @PrimaryGeneratedColumn("uuid")
+  id: string;
 
   @Column({ unique: true })
-  email: string
+  email: string;
 
   @Column()
-  name: string
+  name: string;
 
   @CreateDateColumn()
-  createdAt: Date
+  createdAt: Date;
 }
 ```
 
 ### Query Patterns
+
 - Use Repository pattern for simple CRUD
 - Use QueryBuilder for complex queries
 - Prefer explicit queries over deep relations
@@ -211,22 +229,23 @@ export class User {
 ```typescript
 // ✅ GOOD - Simple repository usage
 export async function getUserById(id: string) {
-  const userRepo = AppDataSource.getRepository(User)
-  return await userRepo.findOne({ where: { id } })
+  const userRepo = AppDataSource.getRepository(User);
+  return await userRepo.findOne({ where: { id } });
 }
 
 // ✅ GOOD - Simple query builder when needed
 export async function searchUsers(query: string) {
-  const userRepo = AppDataSource.getRepository(User)
+  const userRepo = AppDataSource.getRepository(User);
   return await userRepo
-    .createQueryBuilder('user')
-    .where('user.name ILIKE :query', { query: `%${query}%` })
-    .orWhere('user.email ILIKE :query', { query: `%${query}%` })
-    .getMany()
+    .createQueryBuilder("user")
+    .where("user.name ILIKE :query", { query: `%${query}%` })
+    .orWhere("user.email ILIKE :query", { query: `%${query}%` })
+    .getMany();
 }
 ```
 
 ### Migrations
+
 - Use TypeORM migrations for schema changes
 - Keep migrations focused and reversible
 - Test migrations in development before production
@@ -235,6 +254,7 @@ export async function searchUsers(query: string) {
 ## Neon PostgreSQL Specifics
 
 ### Serverless Considerations
+
 - Use connection pooling (Neon's built-in pooler or PgBouncer)
 - Handle connection timeouts gracefully
 - Use parameterized queries to prevent SQL injection
@@ -243,13 +263,14 @@ export async function searchUsers(query: string) {
 ```typescript
 // ✅ GOOD - Neon connection with pooling
 const dataSource = new DataSource({
-  type: 'postgres',
+  type: "postgres",
   url: process.env.DATABASE_URL, // Use Neon's pooled connection string
   // ... other config
-})
+});
 ```
 
 ### Best Practices
+
 - Use transactions for consistency
 - Batch operations when possible
 - Monitor query performance
@@ -258,6 +279,7 @@ const dataSource = new DataSource({
 ## Manus Agent Integration
 
 ### Agent Usage
+
 - Use Manus agent for AI-powered features
 - Keep agent interactions simple and focused
 - Handle errors gracefully with fallbacks
@@ -265,24 +287,25 @@ const dataSource = new DataSource({
 
 ```typescript
 // ✅ GOOD - Simple agent integration
-import { ManusAgent } from '@manus/agent'
+import { ManusAgent } from "@manus/agent";
 
 const agent = new ManusAgent({
   apiKey: process.env.MANUS_API_KEY,
-})
+});
 
 export async function generateResponse(prompt: string) {
   try {
-    const response = await agent.complete(prompt)
-    return response.text
+    const response = await agent.complete(prompt);
+    return response.text;
   } catch (error) {
-    console.error('Agent error:', error)
-    return 'Sorry, I encountered an error.'
+    console.error("Agent error:", error);
+    return "Sorry, I encountered an error.";
   }
 }
 ```
 
 ### Patterns
+
 - Use server actions for agent calls
 - Stream responses for better UX
 - Validate inputs before agent calls
@@ -290,23 +313,24 @@ export async function generateResponse(prompt: string) {
 
 ```typescript
 // ✅ GOOD - Server action with agent
-'use server'
+"use server";
 
-import { agent } from '@/lib/agent'
+import { agent } from "@/lib/agent";
 
 export async function chatAction(message: string) {
   if (!message.trim()) {
-    return { error: 'Message cannot be empty' }
+    return { error: "Message cannot be empty" };
   }
 
-  const response = await agent.complete(message)
-  return { text: response.text }
+  const response = await agent.complete(message);
+  return { text: response.text };
 }
 ```
 
 ## Error Handling
 
 ### Simple Error Patterns
+
 - Use try-catch for async operations
 - Return error objects instead of throwing when appropriate
 - Log errors with context
@@ -316,14 +340,14 @@ export async function chatAction(message: string) {
 // ✅ GOOD - Simple error handling
 export async function fetchUser(id: string) {
   try {
-    const user = await getUserById(id)
+    const user = await getUserById(id);
     if (!user) {
-      return { error: 'User not found' }
+      return { error: "User not found" };
     }
-    return { data: user }
+    return { data: user };
   } catch (error) {
-    console.error('Failed to fetch user:', error)
-    return { error: 'Failed to load user' }
+    console.error("Failed to fetch user:", error);
+    return { error: "Failed to load user" };
   }
 }
 ```
