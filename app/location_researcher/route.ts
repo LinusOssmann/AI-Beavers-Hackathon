@@ -48,7 +48,6 @@ function buildLocationResearcherPrompt(
     "",
     "DO NOT create any files. It does not matter what you respond in the end as long as you called the tools enough times with the appropriate inputs.",
     "",
-    `The plan id is ${planId}`,
     `The location_id to use for MCP tool calls is ${locationId}`,
   ].join("\n");
 }
