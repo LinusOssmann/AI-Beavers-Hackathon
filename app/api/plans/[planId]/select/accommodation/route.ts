@@ -1,8 +1,6 @@
+import { selectAccommodationSchema } from "@/app/api/routes.schemas";
 import { prisma } from "@/prisma/prisma";
 import { NextResponse } from "next/server";
-import { z } from "zod";
-
-const bodySchema = z.object({ accommodationId: z.string().min(1) });
 
 export async function POST(
   request: Request,
@@ -11,7 +9,7 @@ export async function POST(
   try {
     const { planId } = await params;
     const body = await request.json();
-    const parsed = bodySchema.safeParse(body);
+    const parsed = selectAccommodationSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Invalid payload", details: parsed.error.flatten() },

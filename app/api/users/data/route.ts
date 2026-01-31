@@ -1,16 +1,6 @@
+import { dataPayloadSchema } from "@/app/api/routes.schemas";
 import { prisma } from "@/prisma/prisma";
 import { NextResponse } from "next/server";
-import { z } from "zod";
-
-const dataPayloadSchema = z.object({
-  userId: z.string().min(1),
-  data: z.array(
-    z.object({
-      question: z.string(),
-      answer: z.string(),
-    })
-  ),
-});
 
 export async function POST(request: Request) {
   try {
@@ -43,9 +33,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("POST /api/users/data", e);
-    return NextResponse.json(
-      { error: "Failed to save data" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to save data" }, { status: 500 });
   }
 }

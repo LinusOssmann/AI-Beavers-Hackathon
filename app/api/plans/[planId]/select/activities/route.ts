@@ -1,10 +1,6 @@
+import { selectActivitiesSchema } from "@/app/api/routes.schemas";
 import { prisma } from "@/prisma/prisma";
 import { NextResponse } from "next/server";
-import { z } from "zod";
-
-const bodySchema = z.object({
-  activityIds: z.array(z.string().min(1)).min(1),
-});
 
 export async function POST(
   request: Request,
@@ -13,7 +9,7 @@ export async function POST(
   try {
     const { planId } = await params;
     const body = await request.json();
-    const parsed = bodySchema.safeParse(body);
+    const parsed = selectActivitiesSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Invalid payload", details: parsed.error.flatten() },

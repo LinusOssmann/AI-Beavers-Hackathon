@@ -1,14 +1,6 @@
+import { createPlanSchema } from "@/app/api/routes.schemas";
 import { prisma } from "@/prisma/prisma";
 import { NextResponse } from "next/server";
-import { z } from "zod";
-
-const createPlanSchema = z.object({
-  userId: z.string().min(1),
-  title: z.string().min(1),
-  description: z.string().optional(),
-  startDate: z.union([z.string(), z.date()]).optional(),
-  endDate: z.union([z.string(), z.date()]).optional(),
-});
 
 export async function GET(request: Request) {
   try {
