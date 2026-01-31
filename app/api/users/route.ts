@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/prisma/prisma";
+import { UserService } from "@/lib/services/user.service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,21 +8,13 @@ export async function GET(request: NextRequest) {
     const limit = searchParams.get("limit");
     const offset = searchParams.get("offset");
 
-    const where = email
-      ? { email: { contains: email, mode: "insensitive" as const } }
-      : {};
+    const result = await UserService.getUsers({
+      email: email ?? undefined,
+      limit: limit ? Number(limit) : undefined,
+      offset: offset ? Number(offset) : undefined,
+    });
 
-    const [users, total] = await Promise.all([
-      prisma.user.findMany({
-        where,
-        take: limit ? Number(limit) : undefined,
-        skip: offset ? Number(offset) : undefined,
-        orderBy: { createdAt: "desc" },
-      }),
-      prisma.user.count({ where }),
-    ]);
-
-    return NextResponse.json({ data: users, total });
+    return NextResponse.json({ data: result.users, total: result.total });
   } catch (error) {
     console.error("Error fetching users:", error);
     return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
@@ -40,19 +32,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = await prisma.user.create({
-      data: {
-        id,
-        name,
-        email,
-        emailVerified: emailVerified ?? false,
-        image: image ?? null,
-      },
+    const user = await UserService.createUser({
+      id,
+      name,
+      email,
+      emailVerified,
+      image,
     });
 
     return NextResponse.json({ data: user }, { status: 201 });
   } catch (error: any) {
-    if (error.code === "P2002") {
+    if (error.message === "User with this email already exists") {
       return NextResponse.json(
         { error: "User with this email already exists" },
         { status: 409 }
