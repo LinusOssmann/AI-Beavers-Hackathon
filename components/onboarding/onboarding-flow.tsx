@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
+import { updateUserPreferences } from "@/app/actions";
 import { IntroScreen } from "./screens/intro-screen";
 import { TravelStyleScreen } from "./screens/travel-style-screen";
 import { BudgetScreen } from "./screens/budget-screen";
@@ -63,24 +64,16 @@ export function OnboardingFlow({ userId }: OnboardingFlowProps = {}) {
 		if (userId) {
 			setIsSaving(true);
 			try {
-				const response = await fetch(`/api/users/${userId}`, {
-					method: "PUT",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({
-						preferences: {
-							travelStyles: data.travelStyles,
-							budget: data.budget,
-							tripLength: data.tripLength,
-							companion: data.companion,
-							departureLocation: data.departureLocation,
-						},
-						onboardingComplete: true,
-					}),
+				const result = await updateUserPreferences(userId, {
+					travelStyles: data.travelStyles,
+					budget: data.budget,
+					tripLength: data.tripLength,
+					companion: data.companion,
+					departureLocation: data.departureLocation,
 				});
 
-				if (!response.ok) {
-					const errorData = await response.json().catch(() => ({}));
-					throw new Error("Failed to save preferences");
+				if (!result.success) {
+					throw new Error(result.error || "Failed to save preferences");
 				}
 
 				toast.success("Preferences saved!");
