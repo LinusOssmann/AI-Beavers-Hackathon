@@ -37,6 +37,17 @@ export interface ClarifyingQuestion {
   question: string;
 }
 
+export interface Destination {
+  id: string;
+  planId: string;
+  name: string;
+  city?: string;
+  country: string;
+  latitude?: number;
+  longitude?: number;
+  description?: string;
+}
+
 const clarifyingQuestions: ClarifyingQuestion[] = [];
 
 function nextId(): string {
@@ -164,5 +175,37 @@ export const travelStore = {
     const id = nextId();
     clarifyingQuestions.push({ id, locationId, question });
     return id;
+  },
+
+  async addDestination(
+    planId: string,
+    name: string,
+    country: string,
+    city?: string,
+    coordinates?: Coordinates,
+    description?: string
+  ): Promise<string> {
+    // Validate plan exists
+    const plan = await prisma.plan.findUnique({ 
+      where: { id: planId },
+      select: { id: true }
+    });
+    if (!plan) {
+      throw new Error("Plan not found");
+    }
+    
+    const location = await prisma.location.create({
+      data: {
+        planId,
+        name,
+        country,
+        city: city ?? null,
+        latitude: coordinates?.latitude ?? null,
+        longitude: coordinates?.longitude ?? null,
+        description: description ?? null,
+        isSelected: false,
+      },
+    });
+    return location.id;
   },
 };
