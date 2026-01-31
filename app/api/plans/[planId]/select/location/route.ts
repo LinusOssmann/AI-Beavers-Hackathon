@@ -1,3 +1,4 @@
+import getBody from "@/app/api/lib/getBody";
 import { selectLocationSchema } from "@/app/api/routes.schemas";
 import { prisma } from "@/prisma/prisma";
 import { NextResponse } from "next/server";
@@ -8,22 +9,19 @@ export async function POST(
 ) {
   try {
     const { planId } = await params;
-    const body = await request.json();
-    const parsed = selectLocationSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid payload", details: parsed.error.flatten() },
-        { status: 400 }
-      );
-    }
-    const { locationId } = parsed.data;
+
+    const body = await getBody(request, selectLocationSchema);
+    if (body instanceof NextResponse) return body;
+
+    const { locationId } = body;
 
     const location = await prisma.location.findFirst({
       where: { id: locationId, planId },
     });
+
     if (!location) {
       return NextResponse.json(
-        { error: "Location not found for this plan" },
+        { error: "This location wasn't found for this plan." },
         { status: 404 }
       );
     }
@@ -38,11 +36,11 @@ export async function POST(
         data: { isSelected: true },
       }),
     ]);
+
     return NextResponse.json({ ok: true });
-  } catch (e) {
-    console.error("POST /api/plans/[planId]/select/location", e);
+  } catch (error) {
     return NextResponse.json(
-      { error: "Failed to select location" },
+      { error: "There was an error selecting that location." },
       { status: 500 }
     );
   }

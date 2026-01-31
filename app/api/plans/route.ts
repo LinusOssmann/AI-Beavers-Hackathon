@@ -1,3 +1,4 @@
+import getBody from "@/app/api/lib/getBody";
 import { createPlanSchema } from "@/app/api/routes.schemas";
 import { prisma } from "@/prisma/prisma";
 import { NextResponse } from "next/server";
@@ -8,7 +9,7 @@ export async function GET(request: Request) {
     const userId = searchParams.get("userId");
     if (!userId) {
       return NextResponse.json(
-        { error: "userId query is required" },
+        { error: "The 'userId' is needed." },
         { status: 400 }
       );
     }
@@ -17,10 +18,9 @@ export async function GET(request: Request) {
       orderBy: { updatedAt: "desc" },
     });
     return NextResponse.json(plans);
-  } catch (e) {
-    console.error("GET /api/plans", e);
+  } catch (error) {
     return NextResponse.json(
-      { error: "Failed to fetch plans" },
+      { error: "There was an error fetching plans." },
       { status: 500 }
     );
   }
@@ -28,19 +28,17 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const parsed = createPlanSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid payload", details: parsed.error.flatten() },
-        { status: 400 }
-      );
-    }
-    const { userId, title, description, startDate, endDate } = parsed.data;
+    const body = await getBody(request, createPlanSchema);
+    if (body instanceof NextResponse) return body;
+
+    const { userId, title, description, startDate, endDate } = body;
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "The user wasn't found." },
+        { status: 404 }
+      );
     }
 
     const plan = await prisma.plan.create({
@@ -53,10 +51,9 @@ export async function POST(request: Request) {
       },
     });
     return NextResponse.json(plan);
-  } catch (e) {
-    console.error("POST /api/plans", e);
+  } catch (error) {
     return NextResponse.json(
-      { error: "Failed to create plan" },
+      { error: "There was an error creating that plan." },
       { status: 500 }
     );
   }

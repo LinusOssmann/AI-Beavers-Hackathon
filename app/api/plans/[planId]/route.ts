@@ -17,13 +17,12 @@ export async function GET(
       },
     });
     if (!plan) {
-      return NextResponse.json({ error: "Plan not found" }, { status: 404 });
+      return NextResponse.json({ error: "Plan not found." }, { status: 404 });
     }
     return NextResponse.json(plan);
-  } catch (e) {
-    console.error("GET /api/plans/[planId]", e);
+  } catch (error) {
     return NextResponse.json(
-      { error: "Failed to fetch plan" },
+      { error: "There was an error fetching that plan." },
       { status: 500 }
     );
   }

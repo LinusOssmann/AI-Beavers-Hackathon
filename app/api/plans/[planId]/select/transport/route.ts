@@ -1,3 +1,4 @@
+import getBody from "@/app/api/lib/getBody";
 import { selectTransportSchema } from "@/app/api/routes.schemas";
 import { prisma } from "@/prisma/prisma";
 import { NextResponse } from "next/server";
@@ -8,22 +9,18 @@ export async function POST(
 ) {
   try {
     const { planId } = await params;
-    const body = await request.json();
-    const parsed = selectTransportSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid payload", details: parsed.error.flatten() },
-        { status: 400 }
-      );
-    }
-    const { transportId } = parsed.data;
+
+    const body = await getBody(request, selectTransportSchema);
+    if (body instanceof NextResponse) return body;
+
+    const { transportId } = body;
 
     const transport = await prisma.transport.findFirst({
       where: { id: transportId, planId },
     });
     if (!transport) {
       return NextResponse.json(
-        { error: "Transport not found for this plan" },
+        { error: "This transport wasn't found for this plan." },
         { status: 404 }
       );
     }
@@ -39,10 +36,9 @@ export async function POST(
       }),
     ]);
     return NextResponse.json({ ok: true });
-  } catch (e) {
-    console.error("POST /api/plans/[planId]/select/transport", e);
+  } catch (error) {
     return NextResponse.json(
-      { error: "Failed to select transport" },
+      { error: "There was an error selecting that transport." },
       { status: 500 }
     );
   }

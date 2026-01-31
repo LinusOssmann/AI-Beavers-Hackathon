@@ -1,3 +1,4 @@
+import getBody from "@/app/api/lib/getBody";
 import { selectAccommodationSchema } from "@/app/api/routes.schemas";
 import { prisma } from "@/prisma/prisma";
 import { NextResponse } from "next/server";
@@ -8,22 +9,18 @@ export async function POST(
 ) {
   try {
     const { planId } = await params;
-    const body = await request.json();
-    const parsed = selectAccommodationSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid payload", details: parsed.error.flatten() },
-        { status: 400 }
-      );
-    }
-    const { accommodationId } = parsed.data;
+
+    const body = await getBody(request, selectAccommodationSchema);
+    if (body instanceof NextResponse) return body;
+
+    const { accommodationId } = body;
 
     const accommodation = await prisma.accommodation.findFirst({
       where: { id: accommodationId, planId },
     });
     if (!accommodation) {
       return NextResponse.json(
-        { error: "Accommodation not found for this plan" },
+        { error: "This accommodation wasn't found for this plan." },
         { status: 404 }
       );
     }
@@ -39,10 +36,9 @@ export async function POST(
       }),
     ]);
     return NextResponse.json({ ok: true });
-  } catch (e) {
-    console.error("POST /api/plans/[planId]/select/accommodation", e);
+  } catch (error) {
     return NextResponse.json(
-      { error: "Failed to select accommodation" },
+      { error: "There was an error selecting that accommodation." },
       { status: 500 }
     );
   }

@@ -1,25 +1,24 @@
+import getBody from "@/app/api/lib/getBody";
 import { dataPayloadSchema } from "@/app/api/routes.schemas";
 import { prisma } from "@/prisma/prisma";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const parsed = dataPayloadSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid payload", details: parsed.error.flatten() },
-        { status: 400 }
-      );
-    }
-    const { userId, data } = parsed.data;
+    const body = await getBody(request, dataPayloadSchema);
+    if (body instanceof NextResponse) return body;
+
+    const { userId, data } = body;
 
     const existing = await prisma.user.findUnique({
       where: { id: userId },
       select: { contextData: true },
     });
     if (!existing) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "The user wasn't found." },
+        { status: 404 }
+      );
     }
 
     const contextData = (existing.contextData as Record<string, unknown>) ?? {};
@@ -31,8 +30,10 @@ export async function POST(request: Request) {
       },
     });
     return NextResponse.json({ ok: true });
-  } catch (e) {
-    console.error("POST /api/users/data", e);
-    return NextResponse.json({ error: "Failed to save data" }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "There was an error saving that data." },
+      { status: 500 }
+    );
   }
 }
