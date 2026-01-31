@@ -148,6 +148,7 @@ model Accommodation {
   name        String
   type        String?  // e.g., "hotel", "airbnb", "hostel"
   address     String?
+  url         String?
   price       Float?   // Measure: cost
   rating      Float?   // Measure: rating score
   description String?
@@ -170,6 +171,7 @@ model Activity {
   name        String
   type        String?  // e.g., "attraction", "restaurant", "tour"
   address     String?
+  url         String?
   price       Float?   // Measure: cost
   rating      Float?   // Measure: rating score
   description String?
@@ -193,6 +195,7 @@ model Transport {
   name        String?
   from        String?
   to          String?
+  url         String?
   price       Float?   // Measure: cost
   departure   DateTime?
   arrival     DateTime?
