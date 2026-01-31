@@ -1,0 +1,10 @@
+{"location":"sign-up-form.tsx:58","message":"Sign up attempt","data":{"email":"linus@smart-pioneers.com","name":"Linus Noah Ossmann"},"timestamp":1769880998776,"sessionId":"debug-session","hypothesisId":"H4"}
+{"location":"sign-up-form.tsx:70","message":"Sign up result","data":{"hasError":true,"hasData":false},"timestamp":1769880999498,"sessionId":"debug-session","hypothesisId":"H4"}
+{"location":"sign-up-form.tsx:58","message":"Sign up attempt","data":{"email":"test@test.de","name":"Linus Ossmann"},"timestamp":1769881127098,"sessionId":"debug-session","hypothesisId":"H4"}
+{"location":"sign-up-form.tsx:70","message":"Sign up result","data":{"hasError":true,"hasData":false},"timestamp":1769881127825,"sessionId":"debug-session","hypothesisId":"H4"}
+{"location":"sign-up-form.tsx:58","message":"Sign up attempt","data":{"email":"test@test.de","name":"wdad"},"timestamp":1769881806238,"sessionId":"debug-session","hypothesisId":"H4"}
+{"location":"sign-up-form.tsx:70","message":"Sign up result","data":{"hasError":true,"hasData":false},"timestamp":1769881807011,"sessionId":"debug-session","hypothesisId":"H4"}
+{"location":"sign-up-form.tsx:58","message":"Sign up attempt","data":{"email":"test@test.de","name":"test"},"timestamp":1769881847662,"sessionId":"debug-session","hypothesisId":"H4"}
+{"location":"sign-up-form.tsx:70","message":"Sign up result","data":{"hasError":true,"hasData":false},"timestamp":1769881848389,"sessionId":"debug-session","hypothesisId":"H4"}
+{"location":"sign-up-form.tsx:58","message":"Sign up attempt","data":{"email":"test@test.de","name":"test"},"timestamp":1769881894096,"sessionId":"debug-session","hypothesisId":"H4"}
+{"location":"sign-up-form.tsx:70","message":"Sign up result","data":{"hasError":true,"hasData":false},"timestamp":1769881894790,"sessionId":"debug-session","hypothesisId":"H4"}

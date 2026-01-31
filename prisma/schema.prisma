@@ -36,6 +36,14 @@ model User {
   sessions      Session[]
   accounts      Account[]
   plans         Plan[]
+  
+  // Onboarding preferences
+  preferences        Json?     // Travel preferences from onboarding
+  onboardingComplete Boolean   @default(false)
+  
+  // Future context data (Instagram, etc.)
+  contextData      Json?      // Additional user context
+  contextUpdatedAt DateTime?  // When context was last updated
 
   @@unique([email])
   @@map("user")
