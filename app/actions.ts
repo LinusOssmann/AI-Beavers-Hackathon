@@ -43,7 +43,7 @@ export async function sendNotification(message: string) {
       JSON.stringify({
         title: 'TripMatch Notification',
         body: message,
-        icon: '/icon-192x192.png',
+        icon: '/android/android-launchericon-192-192.png',
       })
     )
     return { success: true }
