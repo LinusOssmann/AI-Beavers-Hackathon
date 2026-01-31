@@ -128,6 +128,7 @@ model Location {
   latitude      Float?
   longitude     Float?
   description   String?
+  reason        String?        // Why the model chose this location
   isSelected    Boolean        @default(false)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
@@ -154,6 +155,7 @@ model Accommodation {
   description String?
   checkIn     DateTime?
   checkOut    DateTime?
+  reason      String?  // Why the model chose this accommodation
   isSelected  Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -200,6 +202,7 @@ model Transport {
   departure   DateTime?
   arrival     DateTime?
   description String?
+  reason      String?  // Why the model chose this transport
   isSelected  Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
