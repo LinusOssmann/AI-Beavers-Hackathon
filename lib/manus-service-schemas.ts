@@ -1,37 +1,26 @@
-/**
- * Zod schemas for validating data received from the Manus model (API response).
- * We do not validate outbound DTOs – user and plan data come from the database (Prisma).
- */
-
 import { z } from "zod";
 
-/** Single destination suggestion returned by the model. */
-export const destinationSuggestionSchema = z.object({
-  name: z.string().min(1),
-  country: z.string().min(1),
-  city: z.string().optional(),
-  reason: z.string().optional(),
+export const locationSuggestionSchema = z.object({
+  name: z.string().min(1).describe("The name of the location."),
+  country: z.string().min(1).describe("The country of the location."),
+  city: z.string().optional().describe("The city of the location."),
+  latitude: z.number().optional().describe("The latitude of the location."),
+  longitude: z.number().optional().describe("The longitude of the location."),
+  reason: z
+    .string()
+    .optional()
+    .describe(
+      "The reason for the location suggestion, such as why it might be a good fit, why it's good value or suits their time or other preferences."
+    ),
+  score: z
+    .number()
+    .min(0)
+    .max(100)
+    .describe("The score of the location suggestion for the user."),
 });
 
-/** Array of up to 3 destination suggestions (model response). */
-export const destinationSuggestionsResponseSchema = z
-  .array(destinationSuggestionSchema)
+export const locationSuggestionsResponseSchema = z
+  .array(locationSuggestionSchema)
   .max(3);
 
-export type DestinationSuggestion = z.infer<typeof destinationSuggestionSchema>;
-
-/**
- * Validates and normalizes the parsed model output.
- * Returns only items that pass validation (0–3 items).
- */
-export function validateDestinationSuggestionsResponse(
-  parsed: unknown
-): DestinationSuggestion[] {
-  if (!Array.isArray(parsed)) return [];
-  const result: DestinationSuggestion[] = [];
-  for (let i = 0; i < Math.min(parsed.length, 3); i++) {
-    const item = destinationSuggestionSchema.safeParse(parsed[i]);
-    if (item.success) result.push(item.data);
-  }
-  return result;
-}
+export type LocationSuggestion = z.infer<typeof locationSuggestionSchema>;
