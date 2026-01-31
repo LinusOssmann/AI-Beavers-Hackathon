@@ -166,6 +166,7 @@ model Activity {
   price       Float?
   rating      Float?
   description String?
+  reason      String   // reason why the activity was suggested for the user 
   duration    Int?     // duration in minutes
   isSelected  Boolean  @default(false)
   createdAt   DateTime @default(now())

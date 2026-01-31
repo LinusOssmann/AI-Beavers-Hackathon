@@ -27,7 +27,7 @@ const mcpHandler = createMcpHandler(
         },
       },
       async ({ travel_plan_id }) => {
-        const candidates = travelStore.listActivityCandidates(travel_plan_id);
+        const candidates = await travelStore.listActivityCandidates(travel_plan_id);
         const text = JSON.stringify(candidates, null, 2);
         return { content: [{ type: "text", text }] };
       }
@@ -40,6 +40,7 @@ const mcpHandler = createMcpHandler(
         description: "Adds a single activity candidate to a travel plan. Returns the new candidate ID.",
         inputSchema: {
           travel_plan_id: z.string().min(1),
+          location_id: z.string().min(1),
           activity_name: z.string().min(1),
           activity_coordinates: z.object(coordinatesSchema),
           reason: z.string(),
@@ -48,13 +49,15 @@ const mcpHandler = createMcpHandler(
       },
       async ({
         travel_plan_id,
+        location_id,
         activity_name,
         activity_coordinates,
         reason,
         price_estimate,
       }) => {
-        const id = travelStore.addActivityCandidate(
+        const id = await travelStore.addActivityCandidate(
           travel_plan_id,
+          location_id,
           activity_name,
           activity_coordinates,
           reason,
@@ -65,7 +68,7 @@ const mcpHandler = createMcpHandler(
     );
 
     server.registerTool(
-      "list_accomodation_candidates",
+      "list_accommodation_candidates",
       {
         title: "List Accommodation Candidates",
         description:
@@ -76,40 +79,43 @@ const mcpHandler = createMcpHandler(
       },
       async ({ travel_plan_id }) => {
         const candidates =
-          travelStore.listAccommodationCandidates(travel_plan_id);
+          await travelStore.listAccommodationCandidates(travel_plan_id);
         const text = JSON.stringify(candidates, null, 2);
         return { content: [{ type: "text", text }] };
       }
     );
 
     server.registerTool(
-      "add_accomodation_candidate",
+      "add_accommodation_candidate",
       {
         title: "Add Accommodation Candidate",
         description:
           "Adds a single accommodation candidate to a travel plan. Returns the new candidate ID.",
         inputSchema: {
           travel_plan_id: z.string().min(1),
-          accomodation_name: z.string().min(1),
-          accomodation_type: z.string().min(1),
-          accomodation_coordinates: z.object(coordinatesSchema),
+          location_id: z.string().min(1),
+          accommodation_name: z.string().min(1),
+          accommodation_type: z.string().min(1),
+          accommodation_coordinates: z.object(coordinatesSchema),
           reason: z.string(),
           price_estimate_per_night: z.number(),
         },
       },
       async ({
         travel_plan_id,
-        accomodation_name,
-        accomodation_type,
-        accomodation_coordinates,
+        location_id,
+        accommodation_name,
+        accommodation_type,
+        accommodation_coordinates,
         reason,
         price_estimate_per_night,
       }) => {
-        const id = travelStore.addAccommodationCandidate(
+        const id = await travelStore.addAccommodationCandidate(
           travel_plan_id,
-          accomodation_name,
-          accomodation_type,
-          accomodation_coordinates,
+          location_id,
+          accommodation_name,
+          accommodation_type,
+          accommodation_coordinates,
           reason,
           price_estimate_per_night
         );

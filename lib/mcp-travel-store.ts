@@ -1,6 +1,10 @@
 /**
- * In-memory store for MCP travel tools. Replace with DB later.
+ * MCP travel tools store backed by Prisma.
+ * Activities and accommodations are persisted; clarifying questions remain in-memory (no DB model).
  */
+
+import { prisma } from "@/prisma/prisma";
+import { validateLocationPlan } from "./services/utils";
 
 export interface Coordinates {
   latitude: number;
@@ -10,6 +14,7 @@ export interface Coordinates {
 export interface ActivityCandidate {
   id: string;
   travelPlanId: string;
+  locationId: string;
   activityName: string;
   activityCoordinates: Coordinates;
   reason: string;
@@ -19,6 +24,7 @@ export interface ActivityCandidate {
 export interface AccommodationCandidate {
   id: string;
   travelPlanId: string;
+  locationId: string;
   accommodationName: string;
   accommodationType: string;
   accommodationCoordinates: Coordinates;
@@ -32,63 +38,99 @@ export interface ClarifyingQuestion {
   question: string;
 }
 
-const activityCandidates: ActivityCandidate[] = [];
-const accommodationCandidates: AccommodationCandidate[] = [];
 const clarifyingQuestions: ClarifyingQuestion[] = [];
 
 function nextId(): string {
   return crypto.randomUUID();
 }
 
+function coordsFromLocation(loc: { latitude: number | null; longitude: number | null } | null): Coordinates {
+  if (!loc || loc.latitude == null || loc.longitude == null) {
+    return { latitude: 0, longitude: 0 };
+  }
+  return { latitude: loc.latitude, longitude: loc.longitude };
+}
+
 export const travelStore = {
-  listActivityCandidates(travelPlanId: string): ActivityCandidate[] {
-    return activityCandidates.filter((a) => a.travelPlanId === travelPlanId);
+  async listActivityCandidates(travelPlanId: string): Promise<ActivityCandidate[]> {
+    const activities = await prisma.activity.findMany({
+      where: { planId: travelPlanId },
+      orderBy: { createdAt: "desc" },
+      include: { location: { select: { latitude: true, longitude: true } } },
+    });
+    return activities.map((a) => ({
+      id: a.id,
+      travelPlanId: a.planId,
+      locationId: a.locationId,
+      activityName: a.name,
+      activityCoordinates: coordsFromLocation(a.location),
+      reason: a.reason,
+      priceEstimate: a.price ?? 0,
+    }));
   },
 
-  addActivityCandidate(
+  async addActivityCandidate(
     travelPlanId: string,
+    locationId: string,
     activityName: string,
-    activityCoordinates: Coordinates,
+    _activityCoordinates: Coordinates,
     reason: string,
     priceEstimate: number
-  ): string {
-    const id = nextId();
-    activityCandidates.push({
-      id,
-      travelPlanId,
-      activityName,
-      activityCoordinates,
-      reason,
-      priceEstimate,
+  ): Promise<string> {
+    await validateLocationPlan(locationId, travelPlanId);
+    const activity = await prisma.activity.create({
+      data: {
+        planId: travelPlanId,
+        locationId,
+        name: activityName,
+        reason,
+        price: priceEstimate,
+        isSelected: false,
+      },
     });
-    return id;
+    return activity.id;
   },
 
-  listAccommodationCandidates(travelPlanId: string): AccommodationCandidate[] {
-    return accommodationCandidates.filter(
-      (a) => a.travelPlanId === travelPlanId
-    );
+  async listAccommodationCandidates(travelPlanId: string): Promise<AccommodationCandidate[]> {
+    const accommodations = await prisma.accommodation.findMany({
+      where: { planId: travelPlanId },
+      orderBy: { createdAt: "desc" },
+      include: { location: { select: { latitude: true, longitude: true } } },
+    });
+    return accommodations.map((a) => ({
+      id: a.id,
+      travelPlanId: a.planId,
+      locationId: a.locationId,
+      accommodationName: a.name,
+      accommodationType: a.type ?? "",
+      accommodationCoordinates: coordsFromLocation(a.location),
+      reason: a.description ?? "",
+      priceEstimatePerNight: a.price ?? 0,
+    }));
   },
 
-  addAccommodationCandidate(
+  async addAccommodationCandidate(
     travelPlanId: string,
+    locationId: string,
     accommodationName: string,
     accommodationType: string,
-    accommodationCoordinates: Coordinates,
+    _accommodationCoordinates: Coordinates,
     reason: string,
     priceEstimatePerNight: number
-  ): string {
-    const id = nextId();
-    accommodationCandidates.push({
-      id,
-      travelPlanId,
-      accommodationName,
-      accommodationType,
-      accommodationCoordinates,
-      reason,
-      priceEstimatePerNight,
+  ): Promise<string> {
+    await validateLocationPlan(locationId, travelPlanId);
+    const accommodation = await prisma.accommodation.create({
+      data: {
+        planId: travelPlanId,
+        locationId,
+        name: accommodationName,
+        type: accommodationType,
+        description: reason,
+        price: priceEstimatePerNight,
+        isSelected: false,
+      },
     });
-    return id;
+    return accommodation.id;
   },
 
   addClarifyingQuestion(travelPlanId: string, question: string): string {
