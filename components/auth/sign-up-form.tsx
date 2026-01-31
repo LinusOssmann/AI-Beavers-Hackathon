@@ -55,52 +55,12 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
 	const onSubmit = async (data: SignUpFormData) => {
 		setIsLoading(true);
 
-		// #region agent log
-		fetch(
-			"http://127.0.0.1:7243/ingest/408aa5f2-1708-45ac-98c2-9632a0b8ce7d",
-			{
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					location: "sign-up-form.tsx:58",
-					message: "Sign up attempt",
-					data: { email: data.email, name: data.name },
-					timestamp: Date.now(),
-					sessionId: "debug-session",
-					hypothesisId: "H4",
-				}),
-			},
-		).catch(() => {});
-		// #endregion
-
 		try {
 			const result = await authClient.signUp.email({
 				email: data.email,
 				password: data.password,
 				name: data.name,
 			});
-
-			// #region agent log
-			fetch(
-				"http://127.0.0.1:7243/ingest/408aa5f2-1708-45ac-98c2-9632a0b8ce7d",
-				{
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({
-						location: "sign-up-form.tsx:70",
-						message: "Sign up result",
-						data: {
-							hasError: !!result.error,
-							errorMessage: result.error?.message,
-							hasData: !!result.data,
-						},
-						timestamp: Date.now(),
-						sessionId: "debug-session",
-						hypothesisId: "H4",
-					}),
-				},
-			).catch(() => {});
-			// #endregion
 
 			if (result.error) {
 				toast.error(result.error.message || "Failed to create account");
@@ -112,28 +72,6 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
 			router.push("/dashboard");
 			router.refresh();
 		} catch (error) {
-			// #region agent log
-			fetch(
-				"http://127.0.0.1:7243/ingest/408aa5f2-1708-45ac-98c2-9632a0b8ce7d",
-				{
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({
-						location: "sign-up-form.tsx:85",
-						message: "Sign up exception",
-						data: {
-							error:
-								error instanceof Error
-									? error.message
-									: String(error),
-						},
-						timestamp: Date.now(),
-						sessionId: "debug-session",
-						hypothesisId: "H4",
-					}),
-				},
-			).catch(() => {});
-			// #endregion
 			console.error("Sign up error:", error);
 			toast.error("An unexpected error occurred");
 		} finally {

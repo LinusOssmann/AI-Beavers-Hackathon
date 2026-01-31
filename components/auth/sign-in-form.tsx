@@ -37,51 +37,11 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
 	const onSubmit = async (data: SignInFormData) => {
 		setIsLoading(true);
 
-		// #region agent log
-		fetch(
-			"http://127.0.0.1:7243/ingest/408aa5f2-1708-45ac-98c2-9632a0b8ce7d",
-			{
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					location: "sign-in-form.tsx:40",
-					message: "Sign in attempt",
-					data: { email: data.email },
-					timestamp: Date.now(),
-					sessionId: "debug-session",
-					hypothesisId: "H4",
-				}),
-			},
-		).catch(() => {});
-		// #endregion
-
 		try {
 			const result = await authClient.signIn.email({
 				email: data.email,
 				password: data.password,
 			});
-
-			// #region agent log
-			fetch(
-				"http://127.0.0.1:7243/ingest/408aa5f2-1708-45ac-98c2-9632a0b8ce7d",
-				{
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({
-						location: "sign-in-form.tsx:52",
-						message: "Sign in result",
-						data: {
-							hasError: !!result.error,
-							errorMessage: result.error?.message,
-							hasData: !!result.data,
-						},
-						timestamp: Date.now(),
-						sessionId: "debug-session",
-						hypothesisId: "H4",
-					}),
-				},
-			).catch(() => {});
-			// #endregion
 
 			if (result.error) {
 				toast.error(result.error.message || "Failed to sign in");
@@ -93,28 +53,6 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
 			router.push("/dashboard");
 			router.refresh();
 		} catch (error) {
-			// #region agent log
-			fetch(
-				"http://127.0.0.1:7243/ingest/408aa5f2-1708-45ac-98c2-9632a0b8ce7d",
-				{
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({
-						location: "sign-in-form.tsx:67",
-						message: "Sign in exception",
-						data: {
-							error:
-								error instanceof Error
-									? error.message
-									: String(error),
-						},
-						timestamp: Date.now(),
-						sessionId: "debug-session",
-						hypothesisId: "H4",
-					}),
-				},
-			).catch(() => {});
-			// #endregion
 			console.error("Sign in error:", error);
 			toast.error("An unexpected error occurred");
 		} finally {
