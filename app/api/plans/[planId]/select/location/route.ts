@@ -20,7 +20,11 @@ export async function POST(
 
     const { locationId } = body;
 
-    const ok = await selectLocation(planId, locationId);
+    const ok = await selectLocation(
+      planId,
+      locationId,
+      authResult.userId
+    );
     if (!ok) {
       return NextResponse.json(
         { error: "This location wasn't found for this plan." },

@@ -20,7 +20,11 @@ export async function POST(
 
     const { accommodationId } = body;
 
-    const ok = await selectAccommodation(planId, accommodationId);
+    const ok = await selectAccommodation(
+      planId,
+      accommodationId,
+      authResult.userId
+    );
     if (!ok) {
       return NextResponse.json(
         { error: "This accommodation wasn't found for this plan." },

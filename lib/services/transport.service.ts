@@ -2,8 +2,15 @@ import { prisma } from "@/prisma/prisma";
 
 export async function selectTransport(
   planId: string,
-  transportId: string
+  transportId: string,
+  userId: string | null
 ): Promise<boolean> {
+  if (userId !== null) {
+    const plan = await prisma.plan.findFirst({
+      where: { id: planId, userId },
+    });
+    if (!plan) return false;
+  }
   const transport = await prisma.transport.findFirst({
     where: { id: transportId, planId },
   });

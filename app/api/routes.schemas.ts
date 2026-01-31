@@ -1,8 +1,7 @@
 import { z } from "zod";
 
-/** POST /api/users/data */
+/** POST /api/users/data - userId from authentication only */
 export const dataPayloadSchema = z.object({
-  userId: z.string().min(1),
   data: z.array(
     z.object({
       question: z.string(),
@@ -11,9 +10,8 @@ export const dataPayloadSchema = z.object({
   ),
 });
 
-/** POST /api/plans */
+/** POST /api/plans - userId from authentication only */
 export const createPlanSchema = z.object({
-  userId: z.string().min(1),
   title: z.string().min(1),
   description: z.string().optional(),
   startDate: z.union([z.string(), z.date()]).optional(),

@@ -24,6 +24,15 @@ export async function GET(
     if (!plan) {
       return NextResponse.json({ error: "Plan not found." }, { status: 404 });
     }
+    if (
+      authResult.userId !== null &&
+      plan.userId !== authResult.userId
+    ) {
+      return NextResponse.json(
+        { error: "Forbidden - you can only access your own plans." },
+        { status: 403 }
+      );
+    }
     return NextResponse.json(plan);
   } catch (error) {
     return NextResponse.json(

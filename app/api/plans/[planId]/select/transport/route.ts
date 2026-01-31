@@ -20,7 +20,11 @@ export async function POST(
 
     const { transportId } = body;
 
-    const ok = await selectTransport(planId, transportId);
+    const ok = await selectTransport(
+      planId,
+      transportId,
+      authResult.userId
+    );
     if (!ok) {
       return NextResponse.json(
         { error: "This transport wasn't found for this plan." },

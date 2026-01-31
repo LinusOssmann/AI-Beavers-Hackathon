@@ -10,11 +10,10 @@ export async function GET(request: NextRequest) {
     if (!authResult.isAuthenticated) {
       return unauthorizedResponse();
     }
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
+    const userId = authResult.userId;
     if (!userId) {
       return NextResponse.json(
-        { error: "The 'userId' is needed." },
+        { error: "User session required (userId from authentication)." },
         { status: 400 }
       );
     }
@@ -40,7 +39,14 @@ export async function POST(request: NextRequest) {
     const body = await getBody(request, createPlanSchema);
     if (body instanceof NextResponse) return body;
 
-    const { userId, title, description, startDate, endDate } = body;
+    const { title, description, startDate, endDate } = body;
+    const userId = authResult.userId;
+    if (!userId) {
+      return NextResponse.json(
+        { error: "User session required (userId from authentication)." },
+        { status: 400 }
+      );
+    }
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) {

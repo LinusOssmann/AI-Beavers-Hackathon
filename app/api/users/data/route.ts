@@ -13,7 +13,14 @@ export async function POST(request: NextRequest) {
     const body = await getBody(request, dataPayloadSchema);
     if (body instanceof NextResponse) return body;
 
-    const { userId, data } = body;
+    const { data } = body;
+    const userId = authResult.userId;
+    if (!userId) {
+      return NextResponse.json(
+        { error: "User session required (userId from authentication)." },
+        { status: 400 }
+      );
+    }
 
     const ok = await updateUserContextData(userId, data);
     if (!ok) {

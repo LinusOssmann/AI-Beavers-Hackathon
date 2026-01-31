@@ -2,8 +2,15 @@ import { prisma } from "@/prisma/prisma";
 
 export async function selectActivities(
   planId: string,
-  activityIds: string[]
+  activityIds: string[],
+  userId: string | null
 ): Promise<boolean> {
+  if (userId !== null) {
+    const plan = await prisma.plan.findFirst({
+      where: { id: planId, userId },
+    });
+    if (!plan) return false;
+  }
   const count = await prisma.activity.count({
     where: { id: { in: activityIds }, planId },
   });

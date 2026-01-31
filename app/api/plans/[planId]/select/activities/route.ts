@@ -20,7 +20,11 @@ export async function POST(
 
     const { activityIds } = body;
 
-    const ok = await selectActivities(planId, activityIds);
+    const ok = await selectActivities(
+      planId,
+      activityIds,
+      authResult.userId
+    );
     if (!ok) {
       return NextResponse.json(
         { error: "One or more activities weren't found for this plan." },
