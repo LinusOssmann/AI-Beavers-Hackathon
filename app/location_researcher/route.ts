@@ -6,6 +6,7 @@ const requestSchema = z.object({
   preferences: z.string().min(1),
   preference_summary: z.string().min(1),
   plan_id: z.string().min(1),
+  location_id: z.string().min(1),
 });
 
 function formatDestination(destination: unknown): string {
@@ -21,7 +22,8 @@ function buildLocationResearcherPrompt(
   destination: string,
   preferences: string,
   preferenceSummary: string,
-  planId: string
+  planId: string,
+  locationId: string
 ): string {
   return [
     "You are doing a heavy, in depth research to find accomodation options and activity ideas for a user which wants to travel to the following destioation:",
@@ -47,6 +49,7 @@ function buildLocationResearcherPrompt(
     "DO NOT create any files. It does not matter what you respond in the end as long as you called the tools enough times with the appropriate inputs.",
     "",
     `The plan id is ${planId}`,
+    `The location_id to use for MCP tool calls is ${locationId}`,
   ].join("\n");
 }
 
@@ -57,7 +60,8 @@ export async function POST(request: Request) {
       formatDestination(payload.destination),
       payload.preferences,
       payload.preference_summary,
-      payload.plan_id
+      payload.plan_id,
+      payload.location_id
     );
     const response = await createManusAgentTask(prompt);
     return Response.json({
