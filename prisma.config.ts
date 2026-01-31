@@ -1,3 +1,5 @@
+import "dotenv/config";
+import console from "console";
 import { defineConfig } from "prisma/config";
 
 export default defineConfig({
