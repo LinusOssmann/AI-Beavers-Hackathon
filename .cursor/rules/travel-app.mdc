@@ -1,0 +1,1154 @@
+---
+description: Comprehensive guidelines for TripMatch travel app covering user data, Manus AI integration, location research, suggestions, itineraries, PWA features, and mobile-first UX
+alwaysApply: true
+---
+
+# Travel App Guidelines
+
+You are building TripMatch, a travel app that helps users discover new places and plan trips using AI-powered location research. The app prioritizes simplicity, mobile-first design, and native app feel.
+
+## Design Philosophy
+
+**CRITICAL**: Travel apps must be intuitive, fast, and work offline. Users are often on the move with unreliable connections.
+
+- **Mobile-First**: Design for mobile screens first, enhance for larger screens
+- **Offline-Capable**: Core features work without internet connection
+- **Native Feel**: Use system colors and fonts to feel like a native app
+- **AI-Enhanced**: Manus AI enhances user control, doesn't replace it
+- **Simple Discovery**: Make finding new places effortless and enjoyable
+
+## User Data Collection & Storage
+
+### User Profile Structure
+
+Store basic user information to personalize location suggestions:
+
+```typescript
+interface UserProfile {
+  id: string
+  email: string
+  name: string
+  homeTown: Location
+  preferences: TravelPreferences
+  interests: string[]
+  createdAt: Date
+  updatedAt: Date
+}
+
+interface Location {
+  id: string
+  name: string
+  latitude: number
+  longitude: number
+  city?: string
+  country: string
+  timezone?: string
+}
+
+interface TravelPreferences {
+  budgetRange: 'budget' | 'moderate' | 'luxury'
+  travelStyle: 'solo' | 'couple' | 'family' | 'group'
+  preferredSeasons: string[]
+  accessibilityNeeds?: string[]
+}
+```
+
+### Data Collection Patterns
+
+**✅ GOOD - Progressive data collection**
+
+```typescript
+// Collect data incrementally, don't overwhelm users
+interface OnboardingStep {
+  step: 'homeTown' | 'preferences' | 'interests'
+  isRequired: boolean
+}
+
+async function saveOnboardingData(
+  userId: string,
+  step: OnboardingStep,
+  data: Partial<UserProfile>
+) {
+  // Update only the specific step's data
+  await db.user.update({
+    where: { id: userId },
+    data: {
+      ...data,
+      onboardingCompleted: step.step === 'interests'
+    }
+  })
+}
+```
+
+**✅ GOOD - Validate location data**
+
+```typescript
+function validateLocation(location: unknown): location is Location {
+  return (
+    typeof location === 'object' &&
+    location !== null &&
+    'name' in location &&
+    'latitude' in location &&
+    'longitude' in location &&
+    typeof (location as Location).latitude === 'number' &&
+    typeof (location as Location).longitude === 'number'
+  )
+}
+```
+
+### Storage Best Practices
+
+- Store user preferences in database (TypeORM entities)
+- Cache frequently accessed data in memory (LRU cache)
+- Use localStorage for offline access to user preferences
+- Version user data schema for migrations
+
+## Manus AI Integration for Location Research
+
+### Research Pattern
+
+Manus AI should comprehensively research locations considering multiple factors:
+
+```typescript
+interface LocationResearch {
+  location: Location
+  researchData: {
+    preferences: PreferenceMatch[]
+    locationFactors: LocationFactors
+    reviews: ReviewSummary
+    trends: TrendData
+    budget: BudgetAnalysis
+  }
+  relevanceScore: number
+  reasons: string[]
+}
+
+interface PreferenceMatch {
+  preference: string
+  matchLevel: 'high' | 'medium' | 'low'
+  explanation: string
+}
+
+interface LocationFactors {
+  distanceFromHome: number // kilometers
+  accessibility: string[]
+  weather: WeatherInfo
+  bestTimeToVisit: string[]
+}
+
+interface ReviewSummary {
+  averageRating: number
+  totalReviews: number
+  commonThemes: string[]
+}
+
+interface TrendData {
+  popularityTrend: 'rising' | 'stable' | 'declining'
+  seasonalPeak: string[]
+}
+
+interface BudgetAnalysis {
+  estimatedCost: {
+    budget: number
+    moderate: number
+    luxury: number
+  }
+  costBreakdown: {
+    accommodation: number
+    food: number
+    activities: number
+    transportation: number
+  }
+}
+```
+
+### Server Action Pattern
+
+**✅ GOOD - Use Server Actions for AI research**
+
+```typescript
+'use server'
+
+import { agent } from '@/lib/manus-agent'
+import { cache } from 'react'
+import { db } from '@/lib/db'
+
+export const researchLocation = cache(async (
+  userProfile: UserProfile,
+  locationQuery: string
+): Promise<LocationResearch> => {
+  // Validate input
+  if (!locationQuery.trim()) {
+    throw new Error('Location query is required')
+  }
+
+  // Check cache first
+  const cacheKey = `research:${userProfile.id}:${locationQuery}`
+  const cached = await getCachedResearch(cacheKey)
+  if (cached) return cached
+
+  // Build comprehensive research prompt
+  const prompt = buildResearchPrompt(userProfile, locationQuery)
+
+  try {
+    // Call Manus AI
+    const aiResponse = await agent.research(prompt)
+    
+    // Parse and structure response
+    const research = parseAIResponse(aiResponse, userProfile)
+    
+    // Cache result
+    await cacheResearch(cacheKey, research)
+    
+    return research
+  } catch (error) {
+    console.error('Manus AI research failed:', error)
+    // Fallback to basic location data
+    return getFallbackResearch(locationQuery, userProfile)
+  }
+})
+
+function buildResearchPrompt(
+  profile: UserProfile,
+  query: string
+): string {
+  return `
+    Research the location "${query}" for a user with these preferences:
+    - Home town: ${profile.homeTown.name}, ${profile.homeTown.country}
+    - Budget: ${profile.preferences.budgetRange}
+    - Travel style: ${profile.preferences.travelStyle}
+    - Interests: ${profile.interests.join(', ')}
+    
+    Provide comprehensive research including:
+    1. How well it matches user preferences
+    2. Distance and accessibility from home town
+    3. Weather and best times to visit
+    4. Review summaries and common themes
+    5. Current travel trends
+    6. Budget breakdown (accommodation, food, activities, transportation)
+    7. Relevance score (0-100) and reasons why this location fits
+    
+    Format as JSON matching LocationResearch interface.
+  `
+}
+```
+
+### Error Handling & Fallbacks
+
+**✅ GOOD - Graceful degradation**
+
+```typescript
+async function getFallbackResearch(
+  query: string,
+  profile: UserProfile
+): Promise<LocationResearch> {
+  // Use basic location data from database
+  const location = await db.location.findFirst({
+    where: { name: { contains: query, mode: 'insensitive' } }
+  })
+
+  if (!location) {
+    throw new Error('Location not found')
+  }
+
+  // Calculate basic relevance from stored data
+  const relevanceScore = calculateBasicRelevance(location, profile)
+
+  return {
+    location,
+    researchData: {
+      preferences: [],
+      locationFactors: {
+        distanceFromHome: calculateDistance(profile.homeTown, location),
+        accessibility: location.accessibilityTags || [],
+        weather: location.weatherData || {},
+        bestTimeToVisit: location.seasonalData || []
+      },
+      reviews: {
+        averageRating: location.averageRating || 0,
+        totalReviews: location.reviewCount || 0,
+        commonThemes: []
+      },
+      trends: {
+        popularityTrend: 'stable',
+        seasonalPeak: []
+      },
+      budget: {
+        estimatedCost: location.budgetEstimates || {},
+        costBreakdown: {}
+      }
+    },
+    relevanceScore,
+    reasons: ['Basic location match']
+  }
+}
+```
+
+### Caching Strategy
+
+- Cache research results for 24 hours (locations don't change frequently)
+- Invalidate cache when user preferences change
+- Use LRU cache for frequently accessed locations
+- Store in database for offline access
+
+## Ranked Suggestion System
+
+### Suggestion Structure
+
+```typescript
+interface LocationSuggestion {
+  id: string
+  location: Location
+  relevanceScore: number // 0-100
+  reasons: string[]
+  research: LocationResearch
+  matchFactors: {
+    preferenceMatch: number
+    distanceScore: number
+    budgetMatch: number
+    interestMatch: number
+  }
+  createdAt: Date
+}
+```
+
+### Ranking Algorithm
+
+**✅ GOOD - Multi-factor ranking**
+
+```typescript
+function calculateRelevanceScore(
+  research: LocationResearch,
+  profile: UserProfile
+): number {
+  const factors = {
+    preferenceMatch: calculatePreferenceMatch(research, profile),
+    distanceScore: calculateDistanceScore(research.researchData.locationFactors.distanceFromHome),
+    budgetMatch: calculateBudgetMatch(research.researchData.budget, profile.preferences.budgetRange),
+    interestMatch: calculateInterestMatch(research.researchData.preferences, profile.interests)
+  }
+
+  // Weighted scoring
+  const score = (
+    factors.preferenceMatch * 0.3 +
+    factors.distanceScore * 0.2 +
+    factors.budgetMatch * 0.25 +
+    factors.interestMatch * 0.25
+  )
+
+  return Math.round(score * 100) / 100
+}
+
+function calculatePreferenceMatch(
+  research: LocationResearch,
+  profile: UserProfile
+): number {
+  const matches = research.researchData.preferences
+  const highMatches = matches.filter(m => m.matchLevel === 'high').length
+  const mediumMatches = matches.filter(m => m.matchLevel === 'medium').length
+  
+  return Math.min(1, (highMatches * 0.7 + mediumMatches * 0.3) / 5)
+}
+
+function calculateDistanceScore(distanceKm: number): number {
+  // Closer is better, but not too close (want to explore)
+  if (distanceKm < 50) return 0.3 // Too close
+  if (distanceKm < 500) return 1.0 // Ideal
+  if (distanceKm < 2000) return 0.7 // Good
+  return 0.4 // Far but acceptable
+}
+```
+
+### Displaying Ranked Suggestions
+
+**✅ GOOD - Server component with ranking**
+
+```typescript
+import { cache } from 'react'
+import { researchLocation } from '@/app/actions/research'
+import { db } from '@/lib/db'
+
+const getSuggestions = cache(async (userId: string) => {
+  const profile = await db.user.findUnique({
+    where: { id: userId },
+    include: { homeTown: true }
+  })
+
+  if (!profile) throw new Error('User not found')
+
+  // Get candidate locations
+  const candidates = await db.location.findMany({
+    take: 20,
+    orderBy: { popularityScore: 'desc' }
+  })
+
+  // Research and rank each location
+  const suggestions = await Promise.all(
+    candidates.map(async (location) => {
+      const research = await researchLocation(profile, location.name)
+      return {
+        id: location.id,
+        location,
+        relevanceScore: research.relevanceScore,
+        reasons: research.reasons,
+        research,
+        matchFactors: calculateMatchFactors(research, profile)
+      }
+    })
+  )
+
+  // Sort by relevance score
+  return suggestions.sort((a, b) => b.relevanceScore - a.relevanceScore)
+})
+
+export default async function SuggestionsPage({ userId }: { userId: string }) {
+  const suggestions = await getSuggestions(userId)
+
+  return (
+    <div className="suggestions-container">
+      {suggestions.map((suggestion) => (
+        <LocationCard key={suggestion.id} suggestion={suggestion} />
+      ))}
+    </div>
+  )
+}
+```
+
+## Hybrid Itinerary Generation
+
+### Itinerary Structure
+
+```typescript
+interface Itinerary {
+  id: string
+  userId: string
+  title: string
+  destination: Location
+  startDate: Date
+  endDate: Date
+  days: ItineraryDay[]
+  isCustomizable: boolean
+  isAIGenerated: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+interface ItineraryDay {
+  dayNumber: number
+  date: Date
+  activities: ItineraryActivity[]
+  notes?: string
+}
+
+interface ItineraryActivity {
+  id: string
+  name: string
+  location: Location
+  startTime?: string
+  endTime?: string
+  duration: number // minutes
+  category: 'attraction' | 'restaurant' | 'accommodation' | 'transport' | 'other'
+  cost?: number
+  notes?: string
+  isCustom: boolean // User-added vs AI-generated
+}
+```
+
+### AI Generation Pattern
+
+**✅ GOOD - Generate then allow customization**
+
+```typescript
+'use server'
+
+import { agent } from '@/lib/manus-agent'
+
+export async function generateItinerary(
+  userId: string,
+  destination: Location,
+  startDate: Date,
+  endDate: Date,
+  preferences: TravelPreferences
+): Promise<Itinerary> {
+  const days = calculateDays(startDate, endDate)
+  
+  const prompt = `
+    Generate a ${days}-day itinerary for ${destination.name}, ${destination.country}.
+    
+    User preferences:
+    - Budget: ${preferences.budgetRange}
+    - Travel style: ${preferences.travelStyle}
+    - Interests: ${preferences.interests?.join(', ') || 'general travel'}
+    
+    Include:
+    - Daily activities (attractions, restaurants, experiences)
+    - Realistic timing and duration
+    - Budget estimates per activity
+    - Logical flow (group nearby activities)
+    - Rest time and flexibility
+    
+    Format as JSON matching ItineraryDay[] structure.
+  `
+
+  try {
+    const aiResponse = await agent.generate(prompt)
+    const days = parseItineraryDays(aiResponse, destination, startDate)
+
+    const itinerary = await db.itinerary.create({
+      data: {
+        userId,
+        title: `${days.length}-Day Trip to ${destination.name}`,
+        destinationId: destination.id,
+        startDate,
+        endDate,
+        days: days as any, // TypeORM JSON column
+        isCustomizable: true,
+        isAIGenerated: true
+      }
+    })
+
+    return itinerary
+  } catch (error) {
+    console.error('Itinerary generation failed:', error)
+    throw new Error('Failed to generate itinerary')
+  }
+}
+```
+
+### Customization Pattern
+
+**✅ GOOD - Allow users to modify AI-generated itineraries**
+
+```typescript
+'use server'
+
+export async function updateItineraryActivity(
+  itineraryId: string,
+  dayNumber: number,
+  activityId: string,
+  updates: Partial<ItineraryActivity>
+) {
+  const itinerary = await db.itinerary.findUnique({
+    where: { id: itineraryId }
+  })
+
+  if (!itinerary) throw new Error('Itinerary not found')
+
+  const days = itinerary.days as ItineraryDay[]
+  const day = days.find(d => d.dayNumber === dayNumber)
+  
+  if (!day) throw new Error('Day not found')
+
+  const activityIndex = day.activities.findIndex(a => a.id === activityId)
+  if (activityIndex === -1) throw new Error('Activity not found')
+
+  // Update activity
+  day.activities[activityIndex] = {
+    ...day.activities[activityIndex],
+    ...updates,
+    isCustom: true // Mark as user-modified
+  }
+
+  await db.itinerary.update({
+    where: { id: itineraryId },
+    data: {
+      days: days as any,
+      updatedAt: new Date()
+    }
+  })
+}
+
+export async function addCustomActivity(
+  itineraryId: string,
+  dayNumber: number,
+  activity: Omit<ItineraryActivity, 'id' | 'isCustom'>
+) {
+  const itinerary = await db.itinerary.findUnique({
+    where: { id: itineraryId }
+  })
+
+  if (!itinerary) throw new Error('Itinerary not found')
+
+  const days = itinerary.days as ItineraryDay[]
+  const day = days.find(d => d.dayNumber === dayNumber)
+  
+  if (!day) throw new Error('Day not found')
+
+  day.activities.push({
+    ...activity,
+    id: crypto.randomUUID(),
+    isCustom: true
+  })
+
+  await db.itinerary.update({
+    where: { id: itineraryId },
+    data: {
+      days: days as any,
+      updatedAt: new Date()
+    }
+  })
+}
+```
+
+## PWA-Specific Patterns
+
+### Manifest Configuration
+
+**✅ GOOD - Complete PWA manifest**
+
+```typescript
+// app/manifest.ts
+import { MetadataRoute } from 'next'
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: 'TripMatch - Discover Your Next Adventure',
+    short_name: 'TripMatch',
+    description: 'AI-powered travel app to discover and plan your perfect trip',
+    start_url: '/',
+    display: 'standalone',
+    background_color: '#ffffff',
+    theme_color: '#000000',
+    icons: [
+      {
+        src: '/icon-192.png',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'any maskable'
+      },
+      {
+        src: '/icon-512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'any maskable'
+      }
+    ],
+    categories: ['travel', 'lifestyle'],
+    orientation: 'portrait-primary',
+    scope: '/',
+    prefer_related_applications: false
+  }
+}
+```
+
+### Native Styling
+
+**✅ GOOD - Use system colors and fonts**
+
+```css
+/* app/globals.css */
+:root {
+  /* Use system colors for native feel */
+  --background: Canvas;
+  --foreground: CanvasText;
+  --primary: LinkText;
+  --secondary: GrayText;
+  
+  /* Use system fonts */
+  --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 
+                 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, 
+               Consolas, 'Liberation Mono', monospace;
+}
+
+body {
+  font-family: var(--font-system);
+  background-color: var(--background);
+  color: var(--foreground);
+  
+  /* Support dark mode automatically */
+  color-scheme: light dark;
+}
+
+/* iOS-specific adjustments */
+@supports (-webkit-touch-callout: none) {
+  body {
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+```
+
+### Service Worker Setup
+
+**✅ GOOD - Offline-first service worker**
+
+```typescript
+// public/sw.js
+const CACHE_NAME = 'tripmatch-v1'
+const OFFLINE_URL = '/offline'
+
+const urlsToCache = [
+  '/',
+  '/offline',
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png'
+]
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(urlsToCache)
+    })
+  )
+  self.skipWaiting()
+})
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName)
+          }
+        })
+      )
+    })
+  )
+  self.clients.claim()
+})
+
+self.addEventListener('fetch', (event) => {
+  // Network-first for API calls
+  if (event.request.url.includes('/api/')) {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match(event.request)
+      })
+    )
+    return
+  }
+
+  // Cache-first for static assets
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request).then((response) => {
+        const responseToCache = response.clone()
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache)
+        })
+        return response
+      })
+    }).catch(() => {
+      // Offline fallback
+      if (event.request.destination === 'document') {
+        return caches.match(OFFLINE_URL)
+      }
+    })
+  )
+})
+```
+
+### Push Notifications
+
+**✅ GOOD - User-friendly notification handling**
+
+```typescript
+// lib/notifications.ts
+export async function requestNotificationPermission(): Promise<boolean> {
+  if (!('Notification' in window)) {
+    return false
+  }
+
+  if (Notification.permission === 'granted') {
+    return true
+  }
+
+  if (Notification.permission !== 'denied') {
+    const permission = await Notification.requestPermission()
+    return permission === 'granted'
+  }
+
+  return false
+}
+
+export async function subscribeToPushNotifications(
+  userId: string
+): Promise<PushSubscription | null> {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    return null
+  }
+
+  const registration = await navigator.serviceWorker.ready
+  const subscription = await registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+  })
+
+  // Send subscription to server
+  await fetch('/api/push/subscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, subscription })
+  })
+
+  return subscription
+}
+
+// Server action to send notification
+'use server'
+
+export async function sendTravelNotification(
+  userId: string,
+  title: string,
+  body: string,
+  data?: Record<string, any>
+) {
+  const subscription = await db.pushSubscription.findUnique({
+    where: { userId }
+  })
+
+  if (!subscription) return
+
+  // Send via push service (implement based on your push service)
+  await sendPushNotification(subscription.endpoint, {
+    title,
+    body,
+    data,
+    icon: '/icon-192.png',
+    badge: '/icon-192.png'
+  })
+}
+```
+
+### Install Prompt
+
+**✅ GOOD - Custom install prompt**
+
+```typescript
+'use client'
+
+import { useEffect, useState } from 'react'
+
+export function InstallPrompt() {
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
+  const [showPrompt, setShowPrompt] = useState(false)
+
+  useEffect(() => {
+    const handler = (e: BeforeInstallPromptEvent) => {
+      e.preventDefault()
+      setDeferredPrompt(e)
+      setShowPrompt(true)
+    }
+
+    window.addEventListener('beforeinstallprompt', handler)
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler)
+    }
+  }, [])
+
+  const handleInstall = async () => {
+    if (!deferredPrompt) return
+
+    deferredPrompt.prompt()
+    const { outcome } = await deferredPrompt.userChoice
+    
+    if (outcome === 'accepted') {
+      setShowPrompt(false)
+    }
+    
+    setDeferredPrompt(null)
+  }
+
+  if (!showPrompt) return null
+
+  return (
+    <div className="install-prompt">
+      <p>Install TripMatch for a better experience</p>
+      <button onClick={handleInstall}>Install</button>
+      <button onClick={() => setShowPrompt(false)}>Not now</button>
+    </div>
+  )
+}
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
+}
+```
+
+## Mobile-First UX Patterns
+
+### Responsive Design
+
+**✅ GOOD - Mobile-first breakpoints**
+
+```css
+/* Mobile-first: base styles for mobile */
+.container {
+  padding: 1rem;
+  max-width: 100%;
+}
+
+/* Tablet and up */
+@media (min-width: 768px) {
+  .container {
+    padding: 2rem;
+    max-width: 768px;
+    margin: 0 auto;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1024px;
+  }
+}
+```
+
+### Touch Interactions
+
+**✅ GOOD - Large tap targets and gestures**
+
+```typescript
+// Minimum 44x44px tap targets (iOS HIG)
+.button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 12px 24px;
+  touch-action: manipulation; /* Disable double-tap zoom */
+}
+
+// Swipe gestures for cards
+'use client'
+
+import { useSwipeable } from 'react-swipeable'
+
+function SwipeableCard({ children, onSwipeLeft, onSwipeRight }: Props) {
+  const handlers = useSwipeable({
+    onSwipedLeft: onSwipeLeft,
+    onSwipedRight: onSwipeRight,
+    trackMouse: false,
+    trackTouch: true
+  })
+
+  return (
+    <div {...handlers} className="swipeable-card">
+      {children}
+    </div>
+  )
+}
+```
+
+### Performance Optimization
+
+**✅ GOOD - Optimize for mobile networks**
+
+```typescript
+// Lazy load images below the fold
+import Image from 'next/image'
+
+function LocationImage({ src, alt }: { src: string; alt: string }) {
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      width={400}
+      height={300}
+      loading="lazy"
+      placeholder="blur"
+      quality={75} // Lower quality for faster loads
+    />
+  )
+}
+
+// Use Suspense for progressive loading
+import { Suspense } from 'react'
+
+export default function SuggestionsPage() {
+  return (
+    <Suspense fallback={<SuggestionsSkeleton />}>
+      <SuggestionsList />
+    </Suspense>
+  )
+}
+```
+
+## Map-Centric UI Patterns
+
+### Map Integration
+
+**✅ GOOD - Use Mapbox or Google Maps**
+
+```typescript
+'use client'
+
+import { useEffect, useRef } from 'react'
+import mapboxgl from 'mapbox-gl'
+
+export function LocationMap({ locations }: { locations: Location[] }) {
+  const mapContainer = useRef<HTMLDivElement>(null)
+  const map = useRef<mapboxgl.Map | null>(null)
+
+  useEffect(() => {
+    if (!mapContainer.current) return
+
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/light-v11',
+      center: [locations[0]?.longitude || 0, locations[0]?.latitude || 0],
+      zoom: 10
+    })
+
+    // Add markers
+    locations.forEach((location) => {
+      new mapboxgl.Marker()
+        .setLngLat([location.longitude, location.latitude])
+        .setPopup(
+          new mapboxgl.Popup().setHTML(`<h3>${location.name}</h3>`)
+        )
+        .addTo(map.current!)
+    })
+
+    return () => {
+      map.current?.remove()
+    }
+  }, [locations])
+
+  return (
+    <div
+      ref={mapContainer}
+      className="map-container"
+      style={{ width: '100%', height: '400px' }}
+    />
+  )
+}
+```
+
+### Interactive Maps
+
+**✅ GOOD - Handle map interactions**
+
+```typescript
+'use client'
+
+export function InteractiveMap({ 
+  suggestions, 
+  onLocationSelect 
+}: { 
+  suggestions: LocationSuggestion[]
+  onLocationSelect: (suggestion: LocationSuggestion) => void
+}) {
+  const handleMarkerClick = (suggestion: LocationSuggestion) => {
+    onLocationSelect(suggestion)
+    // Pan map to location
+    map.current?.flyTo({
+      center: [suggestion.location.longitude, suggestion.location.latitude],
+      zoom: 14
+    })
+  }
+
+  return (
+    <LocationMap 
+      locations={suggestions.map(s => s.location)}
+      onMarkerClick={handleMarkerClick}
+    />
+  )
+}
+```
+
+## Card-Based Discovery Interface
+
+### Location Cards
+
+**✅ GOOD - Consistent card design**
+
+```typescript
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+
+interface LocationCardProps {
+  suggestion: LocationSuggestion
+  onSelect?: () => void
+}
+
+export function LocationCard({ suggestion, onSelect }: LocationCardProps) {
+  return (
+    <Card 
+      className="location-card"
+      onClick={onSelect}
+    >
+      <CardHeader>
+        <CardTitle>{suggestion.location.name}</CardTitle>
+        <div className="relevance-score">
+          {suggestion.relevanceScore}% match
+        </div>
+      </CardHeader>
+      <CardContent>
+        <p className="location-info">
+          {suggestion.location.city}, {suggestion.location.country}
+        </p>
+        <div className="match-reasons">
+          {suggestion.reasons.slice(0, 3).map((reason, i) => (
+            <span key={i} className="reason-tag">{reason}</span>
+          ))}
+        </div>
+        {suggestion.research.researchData.budget && (
+          <div className="budget-info">
+            From ${suggestion.research.researchData.budget.estimatedCost.budget}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+```
+
+### Infinite Scroll
+
+**✅ GOOD - Efficient loading**
+
+```typescript
+'use client'
+
+import { useInfiniteQuery } from '@tanstack/react-query'
+
+export function InfiniteSuggestionsList({ userId }: { userId: string }) {
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useInfiniteQuery({
+    queryKey: ['suggestions', userId],
+    queryFn: async ({ pageParam = 0 }) => {
+      const response = await fetch(`/api/suggestions?page=${pageParam}`)
+      return response.json()
+    },
+    getNextPageParam: (lastPage) => lastPage.nextPage,
+    initialPageParam: 0
+  })
+
+  return (
+    <div className="suggestions-list">
+      {data?.pages.map((page) =>
+        page.suggestions.map((suggestion: LocationSuggestion) => (
+          <LocationCard key={suggestion.id} suggestion={suggestion} />
+        ))
+      )}
+      {hasNextPage && (
+        <button 
+          onClick={() => fetchNextPage()}
+          disabled={isFetchingNextPage}
+        >
+          {isFetchingNextPage ? 'Loading...' : 'Load more'}
+        </button>
+      )}
+    </div>
+  )
+}
+```
+
+## Key Principles Summary
+
+1. **Mobile-First**: Design for mobile, enhance for desktop
+2. **Offline-Capable**: Core features work without internet
+3. **Native Feel**: Use system colors and fonts
+4. **AI-Enhanced**: Manus AI enhances user control
+5. **Simple Discovery**: Make finding places effortless
+6. **Progressive Enhancement**: Works offline, enhances online
+7. **Performance**: Optimize for mobile networks
+8. **Accessibility**: Large tap targets, clear labels

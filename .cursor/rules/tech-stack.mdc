@@ -1,0 +1,363 @@
+---
+description: Comprehensive guidelines for Next.js, TypeScript, Node.js, Neon, React, Shadcn UI, TypeORM, and Manus agent with emphasis on simple, easy-to-use designs
+alwaysApply: true
+---
+
+# Tech Stack Guidelines
+
+You are an expert in TypeScript, Node.js, Next.js App Router, React, Shadcn UI, TypeORM, Neon PostgreSQL, and Manus agent integration.
+
+## Design Philosophy: Simplicity First
+
+**CRITICAL**: Always prioritize simple, easy-to-use designs. Complexity should be justified by clear user benefit.
+
+- **Keep UI components minimal and intuitive** - Users should understand functionality without documentation
+- **Prefer straightforward data flows** - Avoid over-engineering with unnecessary abstractions
+- **Use clear, descriptive naming** - Code should be self-documenting
+- **Minimize configuration** - Defaults should work for 80% of use cases
+- **Progressive enhancement** - Start simple, add complexity only when needed
+
+## TypeScript & Node.js
+
+### Type Safety
+- Use strict TypeScript configuration (`strict: true`)
+- Prefer `interface` over `type` for object shapes
+- Avoid `any`; use `unknown` when type is truly unknown
+- Use type guards for runtime validation
+
+```typescript
+// ✅ GOOD - Simple, type-safe
+interface User {
+  id: string
+  email: string
+  name: string
+}
+
+function isValidUser(data: unknown): data is User {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'id' in data &&
+    'email' in data &&
+    'name' in data
+  )
+}
+```
+
+### Code Organization
+- Use functional programming patterns; avoid classes
+- Keep functions focused and single-purpose
+- Use descriptive variable names with auxiliary verbs (e.g., `isLoading`, `hasError`)
+- Structure files: exports, subcomponents, helpers, types
+
+## Next.js App Router
+
+### Server Components First
+- Default to Server Components; use `'use client'` only when necessary
+- Use Server Actions for mutations instead of API routes when possible
+- Leverage React Server Components for data fetching
+- Use `React.cache()` for request-level deduplication
+
+```typescript
+// ✅ GOOD - Simple server component
+import { cache } from 'react'
+import { db } from '@/lib/db'
+
+const getUser = cache(async (id: string) => {
+  return await db.user.findOne({ where: { id } })
+})
+
+export default async function UserPage({ params }: { params: { id: string } }) {
+  const user = await getUser(params.id)
+  return <div>{user.name}</div>
+}
+```
+
+### Performance
+- Minimize `useEffect` and `useState`; prefer Server Components
+- Use dynamic imports for non-critical components
+- Wrap client components in Suspense with fallback
+- Optimize images: WebP format, size data, lazy loading
+
+### Routing
+- Use `nuqs` for URL search parameter state management
+- Keep route structure flat and intuitive
+- Use route groups for organization without affecting URLs
+
+## React Patterns
+
+### Component Design
+- Use functional components exclusively
+- Keep components small and focused
+- Extract custom hooks for reusable logic
+- Prefer composition over prop drilling
+
+```typescript
+// ✅ GOOD - Simple, composable component
+interface ButtonProps {
+  children: React.ReactNode
+  onClick?: () => void
+  variant?: 'primary' | 'secondary'
+}
+
+export function Button({ children, onClick, variant = 'primary' }: ButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn('btn', `btn-${variant}`)}
+    >
+      {children}
+    </button>
+  )
+}
+```
+
+### State Management
+- Use React Server Components for server state
+- Use `useState` for local component state
+- Use `useTransition` for non-urgent updates
+- Avoid global state unless necessary
+
+## Shadcn UI
+
+### Component Usage
+- Use Shadcn UI components as building blocks
+- Customize via CSS variables and Tailwind classes
+- Keep component variants minimal and purposeful
+- Follow Shadcn's composition patterns
+
+```typescript
+// ✅ GOOD - Simple Shadcn usage
+import { Button } from '@/components/ui/button'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+
+export function UserCard({ user }: { user: User }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{user.name}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Button variant="outline">View Profile</Button>
+      </CardContent>
+    </Card>
+  )
+}
+```
+
+### Styling
+- Use Tailwind CSS utility classes
+- Leverage CSS variables for theming
+- Keep custom CSS minimal
+- Use `cn()` utility for conditional classes
+
+## TypeORM with Neon PostgreSQL
+
+### Database Configuration
+- Use connection pooling for Neon serverless
+- Configure TypeORM DataSource in a separate module
+- Use environment variables for connection strings
+- Enable query logging in development only
+
+```typescript
+// ✅ GOOD - Simple TypeORM setup
+import { DataSource } from 'typeorm'
+import { User } from './entities/User'
+
+export const AppDataSource = new DataSource({
+  type: 'postgres',
+  url: process.env.DATABASE_URL,
+  entities: [User],
+  synchronize: false, // Use migrations in production
+  logging: process.env.NODE_ENV === 'development',
+  extra: {
+    max: 10, // Connection pool size
+  },
+})
+```
+
+### Entity Design
+- Keep entities simple and focused
+- Use decorators for clear, declarative definitions
+- Avoid deep nesting; normalize data appropriately
+- Use relations sparingly; prefer explicit queries when simpler
+
+```typescript
+// ✅ GOOD - Simple entity
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm'
+
+@Entity('users')
+export class User {
+  @PrimaryGeneratedColumn('uuid')
+  id: string
+
+  @Column({ unique: true })
+  email: string
+
+  @Column()
+  name: string
+
+  @CreateDateColumn()
+  createdAt: Date
+}
+```
+
+### Query Patterns
+- Use Repository pattern for simple CRUD
+- Use QueryBuilder for complex queries
+- Prefer explicit queries over deep relations
+- Use transactions for multi-step operations
+
+```typescript
+// ✅ GOOD - Simple repository usage
+export async function getUserById(id: string) {
+  const userRepo = AppDataSource.getRepository(User)
+  return await userRepo.findOne({ where: { id } })
+}
+
+// ✅ GOOD - Simple query builder when needed
+export async function searchUsers(query: string) {
+  const userRepo = AppDataSource.getRepository(User)
+  return await userRepo
+    .createQueryBuilder('user')
+    .where('user.name ILIKE :query', { query: `%${query}%` })
+    .orWhere('user.email ILIKE :query', { query: `%${query}%` })
+    .getMany()
+}
+```
+
+### Migrations
+- Use TypeORM migrations for schema changes
+- Keep migrations focused and reversible
+- Test migrations in development before production
+- Name migrations descriptively
+
+## Neon PostgreSQL Specifics
+
+### Serverless Considerations
+- Use connection pooling (Neon's built-in pooler or PgBouncer)
+- Handle connection timeouts gracefully
+- Use parameterized queries to prevent SQL injection
+- Optimize queries for serverless cold starts
+
+```typescript
+// ✅ GOOD - Neon connection with pooling
+const dataSource = new DataSource({
+  type: 'postgres',
+  url: process.env.DATABASE_URL, // Use Neon's pooled connection string
+  // ... other config
+})
+```
+
+### Best Practices
+- Use transactions for consistency
+- Batch operations when possible
+- Monitor query performance
+- Use indexes appropriately
+
+## Manus Agent Integration
+
+### Agent Usage
+- Use Manus agent for AI-powered features
+- Keep agent interactions simple and focused
+- Handle errors gracefully with fallbacks
+- Cache agent responses when appropriate
+
+```typescript
+// ✅ GOOD - Simple agent integration
+import { ManusAgent } from '@manus/agent'
+
+const agent = new ManusAgent({
+  apiKey: process.env.MANUS_API_KEY,
+})
+
+export async function generateResponse(prompt: string) {
+  try {
+    const response = await agent.complete(prompt)
+    return response.text
+  } catch (error) {
+    console.error('Agent error:', error)
+    return 'Sorry, I encountered an error.'
+  }
+}
+```
+
+### Patterns
+- Use server actions for agent calls
+- Stream responses for better UX
+- Validate inputs before agent calls
+- Rate limit agent usage
+
+```typescript
+// ✅ GOOD - Server action with agent
+'use server'
+
+import { agent } from '@/lib/agent'
+
+export async function chatAction(message: string) {
+  if (!message.trim()) {
+    return { error: 'Message cannot be empty' }
+  }
+
+  const response = await agent.complete(message)
+  return { text: response.text }
+}
+```
+
+## Error Handling
+
+### Simple Error Patterns
+- Use try-catch for async operations
+- Return error objects instead of throwing when appropriate
+- Log errors with context
+- Provide user-friendly error messages
+
+```typescript
+// ✅ GOOD - Simple error handling
+export async function fetchUser(id: string) {
+  try {
+    const user = await getUserById(id)
+    if (!user) {
+      return { error: 'User not found' }
+    }
+    return { data: user }
+  } catch (error) {
+    console.error('Failed to fetch user:', error)
+    return { error: 'Failed to load user' }
+  }
+}
+```
+
+## Testing Considerations
+
+- Write tests for critical paths
+- Keep tests simple and focused
+- Use TypeScript for type safety in tests
+- Mock external dependencies appropriately
+
+## File Structure
+
+```
+app/
+  (routes)/
+    page.tsx
+components/
+  ui/          # Shadcn components
+  features/    # Feature-specific components
+lib/
+  db.ts        # TypeORM DataSource
+  entities/    # TypeORM entities
+  agent.ts     # Manus agent setup
+  utils.ts     # Utility functions
+```
+
+## Key Principles Summary
+
+1. **Simplicity First** - Choose the simplest solution that works
+2. **Type Safety** - Leverage TypeScript for correctness
+3. **Server Components** - Default to RSC, use client components sparingly
+4. **Clear Naming** - Code should be self-documenting
+5. **Progressive Enhancement** - Start simple, add complexity only when needed
+6. **Error Handling** - Handle errors gracefully with clear messages
+7. **Performance** - Optimize for user experience, not premature optimization
+8. **Maintainability** - Write code that's easy to understand and modify
