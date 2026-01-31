@@ -19,6 +19,7 @@ export async function updateUserContextData(
   await prisma.user.update({
     where: { id: userId },
     data: {
+      // @ts-expect-error - This should be fixed.
       contextData: { ...contextData, data },
       contextUpdatedAt: new Date(),
     },
