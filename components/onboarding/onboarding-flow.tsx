@@ -59,51 +59,9 @@ export function OnboardingFlow({ userId }: OnboardingFlowProps = {}) {
 	};
 
 	const handleComplete = async () => {
-		// #region agent log
-		fetch(
-			"http://127.0.0.1:7243/ingest/408aa5f2-1708-45ac-98c2-9632a0b8ce7d",
-			{
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					location: "onboarding-flow.tsx:62",
-					message: "handleComplete called",
-					data: {
-						hasUserId: !!userId,
-						userId: userId,
-						preferences: data,
-					},
-					timestamp: Date.now(),
-					sessionId: "debug-session",
-					hypothesisId: "H5",
-				}),
-			},
-		).catch(() => {});
-		// #endregion
-
 		// If userId is provided, save preferences to database
 		if (userId) {
 			setIsSaving(true);
-			// #region agent log
-			fetch(
-				"http://127.0.0.1:7243/ingest/408aa5f2-1708-45ac-98c2-9632a0b8ce7d",
-				{
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({
-						location: "onboarding-flow.tsx:69",
-						message: "Saving preferences via API",
-						data: {
-							userId: userId,
-							apiUrl: `/api/users/${userId}`,
-						},
-						timestamp: Date.now(),
-						sessionId: "debug-session",
-						hypothesisId: "H5",
-					}),
-				},
-			).catch(() => {});
-			// #endregion
 			try {
 				const response = await fetch(`/api/users/${userId}`, {
 					method: "PUT",
@@ -120,46 +78,8 @@ export function OnboardingFlow({ userId }: OnboardingFlowProps = {}) {
 					}),
 				});
 
-				// #region agent log
-				fetch(
-					"http://127.0.0.1:7243/ingest/408aa5f2-1708-45ac-98c2-9632a0b8ce7d",
-					{
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({
-							location: "onboarding-flow.tsx:88",
-							message: "API response received",
-							data: { ok: response.ok, status: response.status },
-							timestamp: Date.now(),
-							sessionId: "debug-session",
-							hypothesisId: "H5",
-						}),
-					},
-				).catch(() => {});
-				// #endregion
-
 				if (!response.ok) {
 					const errorData = await response.json().catch(() => ({}));
-					// #region agent log
-					fetch(
-						"http://127.0.0.1:7243/ingest/408aa5f2-1708-45ac-98c2-9632a0b8ce7d",
-						{
-							method: "POST",
-							headers: { "Content-Type": "application/json" },
-							body: JSON.stringify({
-								location: "onboarding-flow.tsx:94",
-								message: "API error response",
-								data: {
-									status: response.status,
-									errorData: errorData,
-								},
-								timestamp: Date.now(),
-								sessionId: "debug-session",
-								hypothesisId: "H5",
-							}),
-						},
-					).catch(() => {});
-					// #endregion
 					throw new Error("Failed to save preferences");
 				}
 
@@ -167,28 +87,6 @@ export function OnboardingFlow({ userId }: OnboardingFlowProps = {}) {
 				router.push("/dashboard");
 				router.refresh();
 			} catch (error) {
-				// #region agent log
-				fetch(
-					"http://127.0.0.1:7243/ingest/408aa5f2-1708-45ac-98c2-9632a0b8ce7d",
-					{
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({
-							location: "onboarding-flow.tsx:105",
-							message: "Error saving preferences",
-							data: {
-								error:
-									error instanceof Error
-										? error.message
-										: String(error),
-							},
-							timestamp: Date.now(),
-							sessionId: "debug-session",
-							hypothesisId: "H5",
-						}),
-					},
-				).catch(() => {});
-				// #endregion
 				console.error("Error saving preferences:", error);
 				toast.error("Failed to save preferences");
 				setIsSaving(false);
