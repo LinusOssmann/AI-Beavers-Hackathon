@@ -143,6 +143,48 @@ const mcpHandler = createMcpHandler(
         };
       }
     );
+
+    server.registerTool(
+      "add_destination",
+      {
+        title: "Add Destination",
+        description:
+          "Adds a destination (location) to a travel plan. Returns the new destination ID.",
+        inputSchema: {
+          plan_id: z.string().min(1),
+          name: z.string().min(1),
+          country: z.string().min(1),
+          city: z.string().optional(),
+          coordinates: z.object(coordinatesSchema).optional(),
+          description: z.string().optional(),
+        },
+      },
+      async ({
+        plan_id,
+        name,
+        country,
+        city,
+        coordinates,
+        description,
+      }) => {
+        const id = await travelStore.addDestination(
+          plan_id,
+          name,
+          country,
+          city,
+          coordinates,
+          description
+        );
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ id }),
+            },
+          ],
+        };
+      }
+    );
   },
   {},
   {
