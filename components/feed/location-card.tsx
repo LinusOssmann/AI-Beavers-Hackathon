@@ -33,6 +33,13 @@ export function LocationCard({
 					fill
 					className="object-cover group-hover:scale-105 transition-transform duration-300"
 				/>
+				{!isResearching && (
+					<div className="absolute inset-x-0 bottom-0 px-3 pb-3">
+						<div className="inline-flex items-center gap-2 rounded-full bg-black/65 text-white text-xs font-medium px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+							Research this destination
+						</div>
+					</div>
+				)}
 				{isSelected && (
 					<div className="absolute top-3 right-3 bg-primary text-primary-foreground text-xs font-semibold px-2.5 py-1.5 rounded">
 						Selected

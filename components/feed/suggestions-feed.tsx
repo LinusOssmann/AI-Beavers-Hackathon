@@ -57,6 +57,7 @@ export function SuggestionsFeed({
 	const unchangedLocationPollsRef = useRef(0);
 	const researchSignatureRef = useRef("");
 	const unchangedResearchPollsRef = useRef(0);
+	const researchRequestsRef = useRef<Set<string>>(new Set());
 	const [appliedFilters, setAppliedFilters] =
 		useState<FilterState>(DEFAULT_FILTERS);
 	const [summary, setSummary] = useState(preferenceSummary);
@@ -174,10 +175,22 @@ export function SuggestionsFeed({
 				const plan = await planResponse.json();
 				if (!isActive) return;
 
-				const researchCount =
-					(plan.accommodations?.length || 0) +
-					(plan.activities?.length || 0) +
-					(plan.transports?.length || 0);
+				const locationsWithResearch =
+					(plan.locations || []) as Array<
+						Location & {
+							accommodations?: unknown[];
+							activities?: unknown[];
+							transports?: unknown[];
+						}
+					>;
+				const researchCount = locationsWithResearch.reduce((total, loc) => {
+					return (
+						total +
+						(loc.accommodations?.length || 0) +
+						(loc.activities?.length || 0) +
+						(loc.transports?.length || 0)
+					);
+				}, 0);
 				const signature = `${researchCount}:${plan.updatedAt ?? ""}`;
 
 				if (signature === researchSignatureRef.current) {
@@ -286,8 +299,17 @@ export function SuggestionsFeed({
 
 	const handleLocationSelect = async (location: Location) => {
 		if (!planId) return;
+		const isResearchRunningForLocation =
+			researchRequestsRef.current.has(location.id) ||
+			(isPollingResearch && location.isSelected);
+
+		if (isResearchRunningForLocation || location.isSelected) {
+			router.push(`/dashboard/explore/${planId}?locationId=${location.id}`);
+			return;
+		}
 
 		try {
+			researchRequestsRef.current.add(location.id);
 			// Select the location
 			await fetch(`/api/plans/${planId}/select/location`, {
 				method: "POST",
@@ -305,22 +327,26 @@ export function SuggestionsFeed({
 				}),
 			});
 
-			if (response.ok) {
-				const result = await response.json();
-				setResearchTaskId(result.responseId);
-				researchSignatureRef.current = "";
-				unchangedResearchPollsRef.current = 0;
-				setIsPollingResearch(true);
-
-				// Update location selection in UI
-				setLocations((prev) =>
-					prev.map((loc) => ({
-						...loc,
-						isSelected: loc.id === location.id,
-					})),
-				);
+			if (!response.ok) {
+				researchRequestsRef.current.delete(location.id);
+				throw new Error("Failed to start research");
 			}
+
+			const result = await response.json();
+			setResearchTaskId(result.responseId);
+			researchSignatureRef.current = "";
+			unchangedResearchPollsRef.current = 0;
+			setIsPollingResearch(true);
+
+			// Update location selection in UI
+			setLocations((prev) =>
+				prev.map((loc) => ({
+					...loc,
+					isSelected: loc.id === location.id,
+				})),
+			);
 		} catch (error) {
+			researchRequestsRef.current.delete(location.id);
 			console.error("Failed to select location:", error);
 		}
 	};
