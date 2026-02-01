@@ -7,7 +7,13 @@ export default defineConfig({
 		path: "prisma/migrations",
 		seed: "tsx prisma/seed.ts",
 	},
-	datasource: {
-		url: env("DATABASE_URL") ?? "",
-	},
+	// Only specify datasource for migrations when DATABASE_URL is available
+	// During build (prisma generate), this can be undefined
+	...(process.env.DATABASE_URL
+		? {
+				datasource: {
+					url: env("DATABASE_URL"),
+				},
+		  }
+		: {}),
 });
