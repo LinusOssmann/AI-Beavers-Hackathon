@@ -10,6 +10,13 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: '#ffffff',
     theme_color: '#000000',
     icons: [
+      // Primary favicon for tabs and general use
+      {
+        src: '/icon.ico',
+        sizes: 'any',
+        type: 'image/x-icon',
+        purpose: 'any',
+      },
       // Android icons (required for PWA)
       {
         src: '/android/android-launchericon-48-48.png',

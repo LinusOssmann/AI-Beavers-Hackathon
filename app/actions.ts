@@ -48,7 +48,7 @@ export async function sendNotification(message: string) {
     const payload = JSON.stringify({
       title: 'TripMatch Notification',
       body: message,
-      icon: '/android/android-launchericon-192-192.png',
+      icon: '/icon.ico',
     })
     await webpush.sendNotification(subscription, payload, {
       TTL: 60 * 60 * 24, // 24h so push services (e.g. FCM on Chrome) don't drop the message

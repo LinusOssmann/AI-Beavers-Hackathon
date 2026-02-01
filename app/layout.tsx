@@ -32,21 +32,8 @@ export const metadata: Metadata = {
 		"Answer a few quick questions and we'll suggest trips based on your style, budget, and mood.",
 	generator: "v0.app",
 	icons: {
-		icon: [
-			{
-				url: "/icon-light-32x32.png",
-				media: "(prefers-color-scheme: light)",
-			},
-			{
-				url: "/icon-dark-32x32.png",
-				media: "(prefers-color-scheme: dark)",
-			},
-			{
-				url: "/icon.svg",
-				type: "image/svg+xml",
-			},
-		],
-		apple: "/apple-icon.png",
+		icon: "/icon.ico",
+		apple: "/icon.ico",
 	},
 };
 

@@ -26,6 +26,7 @@ function App() {
         ref={(element) => {
           pwaInstallElement.current = element;
         }}
+        icon="/icon.ico"
         install-description="To get the best experience, install TripMatch on your device. You can get notifications, have a native-like experience, and more."
         name="TripMatch"
         description="TripMatch is your personal travel agent."
