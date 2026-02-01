@@ -27,8 +27,10 @@ export function DestinationOverview({ initialLocation }: DestinationOverviewProp
 
 	useEffect(() => {
 		let isActive = true;
+		let pollInterval: ReturnType<typeof setInterval> | null = null;
 
 		const pollLocation = async () => {
+			if (!isActive) return;
 			try {
 				const response = await fetch(`/api/locations/${location.id}`);
 				if (!response.ok) return;
@@ -51,6 +53,7 @@ export function DestinationOverview({ initialLocation }: DestinationOverviewProp
 					nextLocation.transports.length > 0;
 				if (hasResearch && unchangedPollsRef.current >= 3) {
 					isActive = false;
+					if (pollInterval) clearInterval(pollInterval);
 				}
 			} catch (error) {
 				console.error("Failed to refresh location:", error);
@@ -58,11 +61,11 @@ export function DestinationOverview({ initialLocation }: DestinationOverviewProp
 		};
 
 		pollLocation();
-		const pollInterval = setInterval(pollLocation, 8000);
+		pollInterval = setInterval(pollLocation, 8000);
 
 		return () => {
 			isActive = false;
-			clearInterval(pollInterval);
+			if (pollInterval) clearInterval(pollInterval);
 		};
 	}, [location.id]);
 

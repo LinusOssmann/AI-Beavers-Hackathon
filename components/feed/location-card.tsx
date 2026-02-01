@@ -48,7 +48,7 @@ export function LocationCard({
 					<div className="absolute inset-0 bg-black/50 flex items-center justify-center">
 						<div className="flex items-center gap-2 text-white">
 							<Loader2 className="w-5 h-5 animate-spin" />
-							<span className="text-sm font-medium">Researching...</span>
+							<span className="text-sm font-medium">Researching with Manus ...</span>
 						</div>
 					</div>
 				)}
