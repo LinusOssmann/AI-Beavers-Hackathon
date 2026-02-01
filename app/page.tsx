@@ -1,6 +1,7 @@
+import InstallPrompt from "@/components/pwa/install-prompt";
+import { PushNotificationButtons } from "@/components/pwa/push-notification-buttons";
 import { Button } from "@/components/ui/button";
 import { Compass, Map, Sparkles } from "lucide-react";
-import { InstallPrompt } from "@/components/pwa/install-prompt";
 import Link from "next/link";
 
 export default function LandingPage() {
@@ -26,11 +27,16 @@ export default function LandingPage() {
 						<h2 className="text-4xl md:text-6xl font-bold tracking-tight">
 							Let's plan a trip that actually fits you
 						</h2>
+						<div className="flex justify-center gap-8">
+							<InstallPrompt />
+							<PushNotificationButtons />
+						</div>
+
+
 						<p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
 							Answer a few quick questions and we'll suggest trips
 							based on your style, budget, and mood.
 						</p>
-						<InstallPrompt />
 					</div>
 
 					<div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
@@ -77,6 +83,7 @@ export default function LandingPage() {
 							activities, and transportation
 						</p>
 					</div>
+
 
 					<div className="text-center space-y-2">
 						<div className="flex justify-center">

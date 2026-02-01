@@ -6,11 +6,15 @@ import { prisma } from '@/prisma/prisma'
 import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
 
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT || 'mailto:your-email@example.com',
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-)
+const vapidPublic = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim()
+const vapidPrivate = process.env.VAPID_PRIVATE_KEY?.trim()
+if (vapidPublic && vapidPrivate) {
+  webpush.setVapidDetails(
+    process.env.VAPID_SUBJECT?.trim() || 'mailto:your-email@example.com',
+    vapidPublic,
+    vapidPrivate
+  )
+}
 
 // Store subscription as JSON-serializable object
 let subscription: PushSubscription | null = null
@@ -41,14 +45,14 @@ export async function sendNotification(message: string) {
   }
 
   try {
-    await webpush.sendNotification(
-      subscription,
-      JSON.stringify({
-        title: 'TripMatch Notification',
-        body: message,
-        icon: '/android/android-launchericon-192-192.png',
-      })
-    )
+    const payload = JSON.stringify({
+      title: 'TripMatch Notification',
+      body: message,
+      icon: '/android/android-launchericon-192-192.png',
+    })
+    await webpush.sendNotification(subscription, payload, {
+      TTL: 60 * 60 * 24, // 24h so push services (e.g. FCM on Chrome) don't drop the message
+    })
     return { success: true }
   } catch (error) {
     console.error('Error sending push notification:', error)
