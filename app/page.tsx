@@ -1,4 +1,4 @@
-import { InstallPrompt } from "@/components/pwa/install-prompt";
+import InstallPrompt from "@/components/pwa/install-prompt";
 import { PushNotificationButtons } from "@/components/pwa/push-notification-buttons";
 import { Button } from "@/components/ui/button";
 import { Compass, Map, Sparkles } from "lucide-react";
