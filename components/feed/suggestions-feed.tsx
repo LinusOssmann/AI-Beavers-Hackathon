@@ -299,6 +299,10 @@ export function SuggestionsFeed({
 
 	const handleLocationSelect = async (location: Location) => {
 		if (!planId) return;
+		if (!location?.id) {
+			console.error("Missing location id for destination navigation", location);
+			return;
+		}
 		const isResearchRunningForLocation =
 			researchRequestsRef.current.has(location.id) ||
 			(isPollingResearch && location.isSelected);
