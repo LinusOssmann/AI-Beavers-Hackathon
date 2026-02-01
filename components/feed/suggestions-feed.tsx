@@ -4,7 +4,7 @@
  */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles, Loader2, Compass } from "lucide-react";
 import { Filters, type FilterState } from "./filters";
@@ -53,6 +53,10 @@ export function SuggestionsFeed({
 	const [isPollingLocations, setIsPollingLocations] = useState(false);
 	const [isPollingResearch, setIsPollingResearch] = useState(false);
 	const [taskStatus, setTaskStatus] = useState("");
+	const locationsSignatureRef = useRef("");
+	const unchangedLocationPollsRef = useRef(0);
+	const researchSignatureRef = useRef("");
+	const unchangedResearchPollsRef = useRef(0);
 	const [appliedFilters, setAppliedFilters] =
 		useState<FilterState>(DEFAULT_FILTERS);
 	const [summary, setSummary] = useState(preferenceSummary);
@@ -120,60 +124,86 @@ export function SuggestionsFeed({
 	// Poll for location suggestions
 	useEffect(() => {
 		if (!isPollingLocations || !locationTaskId || !planId) return;
+		let isActive = true;
 
-		const pollInterval = setInterval(async () => {
+		const pollPlan = async () => {
 			try {
-				const response = await fetch(
-					`/check-status?responseId=${locationTaskId}`,
-				);
-				const data = await response.json();
+				const planResponse = await fetch(`/api/plans/${planId}`);
+				if (!planResponse.ok) return;
+				const plan = await planResponse.json();
+				if (!isActive) return;
 
-				setTaskStatus(data.status);
+				const nextLocations = plan.locations || [];
+				setLocations(nextLocations);
+				setTaskStatus(`${nextLocations.length} found`);
 
-				if (data.status === "completed") {
+				const signature = nextLocations.map((location: Location) => location.id).join(",");
+				if (signature === locationsSignatureRef.current) {
+					unchangedLocationPollsRef.current += 1;
+				} else {
+					locationsSignatureRef.current = signature;
+					unchangedLocationPollsRef.current = 0;
+				}
+
+				if (nextLocations.length > 0 && unchangedLocationPollsRef.current >= 3) {
 					setIsPollingLocations(false);
-					// Fetch locations from database
-					const planResponse = await fetch(`/api/plans/${planId}`);
-					const plan = await planResponse.json();
-					setLocations(plan.locations || []);
-				} else if (data.status === "failed") {
-					setIsPollingLocations(false);
-					console.error("Location task failed:", data.error);
 				}
 			} catch (error) {
 				console.error("Polling error:", error);
 			}
-		}, 3000);
+		};
 
-		return () => clearInterval(pollInterval);
+		pollPlan();
+		const pollInterval = setInterval(pollPlan, 4000);
+
+		return () => {
+			isActive = false;
+			clearInterval(pollInterval);
+		};
 	}, [isPollingLocations, locationTaskId, planId]);
 
 	// Poll for research results
 	useEffect(() => {
-		if (!isPollingResearch || !researchTaskId) return;
+		if (!isPollingResearch || !researchTaskId || !planId) return;
+		let isActive = true;
 
-		const pollInterval = setInterval(async () => {
+		const pollPlan = async () => {
 			try {
-				const response = await fetch(
-					`/check-status?responseId=${researchTaskId}`,
-				);
-				const data = await response.json();
+				const planResponse = await fetch(`/api/plans/${planId}`);
+				if (!planResponse.ok) return;
+				const plan = await planResponse.json();
+				if (!isActive) return;
 
-				if (data.status === "completed") {
-					setIsPollingResearch(false);
-					// Navigate to trip detail or refresh
+				const researchCount =
+					(plan.accommodations?.length || 0) +
+					(plan.activities?.length || 0) +
+					(plan.transports?.length || 0);
+				const signature = `${researchCount}:${plan.updatedAt ?? ""}`;
+
+				if (signature === researchSignatureRef.current) {
+					unchangedResearchPollsRef.current += 1;
+				} else {
+					researchSignatureRef.current = signature;
+					unchangedResearchPollsRef.current = 0;
 					router.refresh();
-				} else if (data.status === "failed") {
+				}
+
+				if (researchCount > 0 && unchangedResearchPollsRef.current >= 3) {
 					setIsPollingResearch(false);
-					console.error("Research task failed:", data.error);
 				}
 			} catch (error) {
 				console.error("Polling error:", error);
 			}
-		}, 3000);
+		};
 
-		return () => clearInterval(pollInterval);
-	}, [isPollingResearch, researchTaskId, router]);
+		pollPlan();
+		const pollInterval = setInterval(pollPlan, 4000);
+
+		return () => {
+			isActive = false;
+			clearInterval(pollInterval);
+		};
+	}, [isPollingResearch, planId, researchTaskId, router]);
 
 	const handleGenerate = async () => {
 		if (isGenerating || isPollingLocations) return;
@@ -210,8 +240,10 @@ export function SuggestionsFeed({
 
 			const locationResult = await locationResponse.json();
 			setLocationTaskId(locationResult.responseId);
+			locationsSignatureRef.current = "";
+			unchangedLocationPollsRef.current = 0;
 			setIsPollingLocations(true);
-			setTaskStatus("processing");
+			setTaskStatus("polling");
 		} catch (error) {
 			console.error("Failed to generate:", error);
 		} finally {
@@ -241,8 +273,10 @@ export function SuggestionsFeed({
 
 			const result = await response.json();
 			setLocationTaskId(result.responseId);
+			locationsSignatureRef.current = "";
+			unchangedLocationPollsRef.current = 0;
 			setIsPollingLocations(true);
-			setTaskStatus("processing");
+			setTaskStatus("polling");
 		} catch (error) {
 			console.error("Failed to regenerate:", error);
 		} finally {
@@ -274,6 +308,8 @@ export function SuggestionsFeed({
 			if (response.ok) {
 				const result = await response.json();
 				setResearchTaskId(result.responseId);
+				researchSignatureRef.current = "";
+				unchangedResearchPollsRef.current = 0;
 				setIsPollingResearch(true);
 
 				// Update location selection in UI
