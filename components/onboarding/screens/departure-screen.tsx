@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { MapPin } from "lucide-react"
+import { MapPin, Loader2 } from "lucide-react"
+import type { City } from "@/types/city"
 
 interface DepartureScreenProps {
   value: string
@@ -9,33 +10,39 @@ interface DepartureScreenProps {
   onComplete: () => void
 }
 
-const SUGGESTED_CITIES = [
-  "Amsterdam, Netherlands",
-  "Barcelona, Spain",
-  "Berlin, Germany",
-  "London, United Kingdom",
-  "Paris, France",
-  "Rome, Italy",
-  "New York, USA",
-  "Los Angeles, USA",
-  "Tokyo, Japan",
-  "Sydney, Australia",
-]
-
 export function DepartureScreen({ value, onChange, onComplete }: DepartureScreenProps) {
   const [isFocused, setIsFocused] = useState(false)
   const [suggestions, setSuggestions] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (value && isFocused) {
-      const filtered = SUGGESTED_CITIES.filter((city) =>
-        city.toLowerCase().includes(value.toLowerCase())
-      )
-      setSuggestions(filtered.slice(0, 5))
-    } else {
-      setSuggestions([])
-    }
+    // Debounce and fetch cities from API
+    const timer = setTimeout(async () => {
+      if (value && isFocused && value.length >= 2) {
+        setIsLoading(true)
+        try {
+          const response = await fetch(`/api/cities/search?q=${encodeURIComponent(value)}&limit=5`)
+          if (response.ok) {
+            const data = await response.json()
+            const cityNames = data.cities.map((city: City) => `${city.name}, ${city.country}`)
+            setSuggestions(cityNames)
+          } else {
+            setSuggestions([])
+          }
+        } catch (error) {
+          console.error("Error fetching cities:", error)
+          setSuggestions([])
+        } finally {
+          setIsLoading(false)
+        }
+      } else {
+        setSuggestions([])
+        setIsLoading(false)
+      }
+    }, 300)
+
+    return () => clearTimeout(timer)
   }, [value, isFocused])
 
   const handleSelect = (city: string) => {
@@ -71,17 +78,24 @@ export function DepartureScreen({ value, onChange, onComplete }: DepartureScreen
             />
           </div>
           
-          {suggestions.length > 0 && (
+          {(suggestions.length > 0 || isLoading) && (
             <div className="absolute top-full left-0 right-0 mt-2 bg-card border-2 border-border rounded-lg overflow-hidden z-10 shadow-md">
-              {suggestions.map((city) => (
-                <button
-                  key={city}
-                  onClick={() => handleSelect(city)}
-                  className="w-full text-left px-4 py-3 hover:bg-secondary transition-colors text-foreground"
-                >
-                  {city}
-                </button>
-              ))}
+              {isLoading ? (
+                <div className="flex items-center justify-center px-4 py-3 text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  <span className="text-sm">Searching cities...</span>
+                </div>
+              ) : suggestions.length > 0 ? (
+                suggestions.map((city) => (
+                  <button
+                    key={city}
+                    onClick={() => handleSelect(city)}
+                    className="w-full text-left px-4 py-3 hover:bg-secondary transition-colors text-foreground"
+                  >
+                    {city}
+                  </button>
+                ))
+              ) : null}
             </div>
           )}
         </div>
