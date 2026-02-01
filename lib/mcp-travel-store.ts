@@ -28,12 +28,6 @@ export interface AccommodationCandidate {
   priceEstimatePerNight: number;
 }
 
-export interface ClarifyingQuestion {
-  id: string;
-  locationId: string;
-  question: string;
-}
-
 export interface Destination {
   id: string;
   planId: string;
@@ -43,9 +37,8 @@ export interface Destination {
   latitude?: number;
   longitude?: number;
   description?: string;
+  reason: string;
 }
-
-const clarifyingQuestions: ClarifyingQuestion[] = [];
 
 function nextId(): string {
   return crypto.randomUUID();
@@ -96,27 +89,23 @@ export const travelStore = {
     );
   },
 
-  addClarifyingQuestion(locationId: string, question: string): string {
-    const id = nextId();
-    clarifyingQuestions.push({ id, locationId, question });
-    return id;
-  },
-
   async addDestination(
     planId: string,
     name: string,
     country: string,
     city?: string,
     coordinates?: Coordinates,
-    description?: string
+    description?: string,
+    reason: string
   ): Promise<string> {
-    return locationService.createLocation(
+    return locationService.createLocation({
       planId,
       name,
       country,
-      city ?? null,
-      coordinates ?? null,
-      description ?? null
-    );
+      city: city ?? null,
+      coordinates: coordinates ?? null,
+      description: description ?? null,
+      reason: reason,
+    });
   },
 };

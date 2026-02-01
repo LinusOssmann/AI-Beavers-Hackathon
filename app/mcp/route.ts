@@ -159,38 +159,6 @@ const handler = createMcpHandler(
     );
 
     server.registerTool(
-      "addClarifyingQuestion",
-      {
-        title: "Add Clarifying Question",
-        description:
-          "Adds a clarifying question to a location. The question is saved for later and not answered immediately.",
-        inputSchema: {
-          locationId: z.string().min(1),
-          question: z.string().min(1),
-        },
-      },
-      async ({ locationId, question }) => {
-        try {
-          const id = travelStore.addClarifyingQuestion(locationId, question);
-          return {
-            content: [
-              {
-                type: "text" as const,
-                text: JSON.stringify({
-                  id,
-                  message: "Clarifying question saved for later.",
-                }),
-              },
-            ],
-          };
-        } catch (err) {
-          const message = err instanceof Error ? err.message : String(err);
-          return toolError(message);
-        }
-      }
-    );
-
-    server.registerTool(
       "addDestination",
       {
         title: "Add Destination",
@@ -203,23 +171,25 @@ const handler = createMcpHandler(
           city: z.string().optional(),
           coordinates: coordinatesSchema.optional(),
           description: z.string().optional(),
+          reason: z.string().min(1),
         },
       },
-      async ({ planId, name, country, city, coordinates, description }) => {
+      async ({ planId, name, country, city, coordinates, description, reason }) => {
         try {
-          const id = await locationService.createLocation(
+          const id = await locationService.createLocation({
             planId,
             name,
             country,
-            city ?? null,
-            coordinates
+            city: city ?? null,
+            coordinates: coordinates
               ? {
                   latitude: coordinates.latitude,
                   longitude: coordinates.longitude,
                 }
               : null,
-            description ?? null
-          );
+            description: description ?? null,
+            reason: reason,
+          });
           return {
             content: [{ type: "text" as const, text: JSON.stringify({ id }) }],
           };

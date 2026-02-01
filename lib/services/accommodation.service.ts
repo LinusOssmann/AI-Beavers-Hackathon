@@ -33,7 +33,7 @@ export async function listAccommodationsByLocation(
       latitude: a.location.latitude ?? 0,
       longitude: a.location.longitude ?? 0,
     },
-    reason: a.description ?? "",
+    reason: a.reason ?? "",
     priceEstimatePerNight: a.price ?? 0,
   }));
 }
@@ -54,11 +54,10 @@ export async function createAccommodation(
   }
   const accommodation = await prisma.accommodation.create({
     data: {
-      plan: { connect: { id: location.planId } },
       location: { connect: { id: locationId } },
       name: accommodationName,
       type: accommodationType,
-      description: reason,
+      reason: reason,
       price: priceEstimatePerNight,
       isSelected: false,
     },
@@ -78,13 +77,13 @@ export async function selectAccommodation(
     if (!plan) return false;
   }
   const accommodation = await prisma.accommodation.findFirst({
-    where: { id: accommodationId, planId },
+    where: { id: accommodationId, location: { planId } },
   });
   if (!accommodation) return false;
 
   await prisma.$transaction([
     prisma.accommodation.updateMany({
-      where: { planId },
+      where: { location: { planId } },
       data: { isSelected: false },
     }),
     prisma.accommodation.update({
