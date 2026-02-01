@@ -10,6 +10,8 @@
 		"prisma:generate": "prisma generate",
 		"prisma:migrate": "prisma migrate dev",
 		"prisma:migrate:debug": "tsx scripts/migrate-with-logging.ts",
+		"test": "vitest",
+		"test:run": "vitest run",
 		"test:db": "tsx scripts/test-prisma-connection.ts",
 		"clean": "rm -rf .next node_modules"
 	},
@@ -75,16 +77,19 @@
 	},
 	"devDependencies": {
 		"@tailwindcss/postcss": "^4.1.9",
+		"jsdom": "^25.0.0",
 		"@types/node": "^22",
 		"@types/pg": "^8.16.0",
 		"@types/react": "^19",
 		"@types/react-dom": "^19",
 		"@types/web-push": "^3.6.4",
+		"msw": "^2.12.7",
 		"postcss": "^8.5",
 		"prisma": "^7.3.0",
 		"tailwindcss": "^4.1.9",
 		"tsx": "^4.21.0",
 		"tw-animate-css": "1.3.3",
-		"typescript": "^5"
+		"typescript": "^5",
+		"vitest": "^4.0.18"
 	}
 }
