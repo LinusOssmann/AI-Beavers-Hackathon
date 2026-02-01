@@ -1,3 +1,7 @@
+/**
+ * Suggestions feed: creates a plan, runs location suggester, polls for locations and research.
+ * Lets the user select a location and start research, then navigate to trip detail.
+ */
 "use client";
 
 import { useEffect, useState } from "react";

@@ -1,3 +1,7 @@
+/**
+ * POST /api/users/data - save user context data (e.g. onboarding Q&A).
+ * Body: dataPayloadSchema. User id comes from authentication.
+ */
 import getBody from "@/app/api/lib/getBody";
 import { dataPayloadSchema } from "@/app/api/routes.schemas";
 import { authenticateRequest, unauthorizedResponse } from "@/lib/auth-utils";

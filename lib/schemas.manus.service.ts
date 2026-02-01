@@ -1,3 +1,7 @@
+/**
+ * Zod schemas for Manus agent outputs (locations, accommodations, activities, transports).
+ * Used to validate and type responses from the agent.
+ */
 import { z } from "zod";
 
 export const locationSuggestionSchema = z.object({

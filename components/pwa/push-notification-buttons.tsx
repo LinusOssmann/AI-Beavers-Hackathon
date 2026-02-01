@@ -1,3 +1,7 @@
+/**
+ * Push notification subscribe/unsubscribe buttons.
+ * Uses the service worker and VAPID key to subscribe and calls server actions to store or clear the subscription.
+ */
 'use client'
 
 import { sendNotification, subscribeUser, unsubscribeUser } from '@/app/actions'
@@ -19,6 +23,7 @@ function bufferToBase64Url(buf: ArrayBuffer): string {
   return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
+/** Returns the current push subscription from the service worker, or null if not supported or not subscribed. */
 export async function getCurrentPushSubscription(): Promise<PushSubscription | null> {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
     return null;

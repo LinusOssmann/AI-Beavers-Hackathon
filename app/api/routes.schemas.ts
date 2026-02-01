@@ -1,3 +1,7 @@
+/**
+ * Zod schemas for API route request bodies.
+ * Each schema documents the route it applies to; userId comes from authentication where noted.
+ */
 import { z } from "zod";
 
 /** POST /api/users/data - userId from authentication only */

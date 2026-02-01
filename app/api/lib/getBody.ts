@@ -1,6 +1,11 @@
+/**
+ * Parses and validates the request body with a Zod schema.
+ * Returns the parsed data or a 400 NextResponse when validation fails.
+ */
 import { NextResponse } from "next/server";
 import z from "zod";
 
+/** Parses JSON body and validates with the given schema; returns data or error response. */
 export default async function getBody<T>(
   request: Request,
   schema: z.ZodType<T>

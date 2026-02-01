@@ -1,3 +1,7 @@
+/**
+ * Next.js config: security headers, CORS for /mcp, and service worker headers.
+ * Also allows ngrok origins in dev for MCP over tunnels.
+ */
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {

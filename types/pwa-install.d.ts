@@ -1,3 +1,7 @@
+/**
+ * Type declarations for the pwa-install custom element.
+ * Extends JSX and HTMLElement for the install prompt component.
+ */
 import '@khmyznikov/pwa-install'
 
 declare global {

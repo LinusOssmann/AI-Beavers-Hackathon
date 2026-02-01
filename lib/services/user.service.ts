@@ -1,3 +1,7 @@
+/**
+ * User context and preferences.
+ * The API updates the user's context data (e.g. onboarding Q&A) stored on the user record.
+ */
 import { prisma } from "@/prisma/prisma";
 
 interface ContextDataItem {
@@ -5,6 +9,7 @@ interface ContextDataItem {
   answer: string;
 }
 
+/** Merges the given Q&A pairs into the user's context data. Returns false if the user is not found. */
 export async function updateUserContextData(
   userId: string,
   data: ContextDataItem[]

@@ -1,3 +1,7 @@
+/**
+ * Registers the PWA service worker on the client.
+ * Registers /sw.js with scope / and listens for updates.
+ */
 'use client'
 
 import { useEffect } from 'react'

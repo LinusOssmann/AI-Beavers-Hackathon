@@ -1,5 +1,10 @@
+/**
+ * Transport selection for a plan.
+ * The API marks one transport as selected per plan and clears others.
+ */
 import { prisma } from "@/prisma/prisma";
 
+/** Marks the given transport as selected for the plan; clears others. Returns true if successful. */
 export async function selectTransport(
   planId: string,
   transportId: string,

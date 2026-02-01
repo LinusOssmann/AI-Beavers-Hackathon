@@ -1,3 +1,7 @@
+/**
+ * City search via GeoDB (RapidAPI).
+ * Caches results in memory for 5 minutes and exposes a React-cached search for RSC.
+ */
 import { cache } from "react"
 import type { City, GeoCityResponse } from "@/types/city"
 
@@ -38,6 +42,7 @@ function setCachedResult(query: string, limit: number, data: City[]): void {
   }
 }
 
+/** Fetches cities from GeoDB by name prefix; uses cache when available. */
 export async function searchCitiesAPI(
   query: string,
   limit: number = 10
@@ -97,13 +102,15 @@ export async function searchCitiesAPI(
   }
 }
 
-// React Server Component cached version
+/** React Server Component cached version of searchCitiesAPI. */
 export const searchCities = cache(searchCitiesAPI)
 
+/** Returns a display string like "City, Country". */
 export function formatCityName(city: City): string {
   return `${city.name}, ${city.country}`
 }
 
+/** Maps cities to display strings for dropdown options. */
 export function formatCitiesForDropdown(cities: City[]): string[] {
   return cities.map(formatCityName)
 }

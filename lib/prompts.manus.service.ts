@@ -1,6 +1,11 @@
+/**
+ * Prompts for Manus agent tasks (location, accommodation, activity, transport, preferences).
+ * Each function builds a prompt from plan and user data for the agent to use.
+ */
 import { Plan } from "@/generated/prisma/client";
 import { prisma } from "@/prisma/prisma";
 
+/** Builds the location-suggestion prompt for the given plan. */
 export async function getLocationPrompt(plan: Plan) {
   const user = await prisma.user.findUnique({
     where: { id: plan.userId },
@@ -32,6 +37,7 @@ export async function getLocationPrompt(plan: Plan) {
   `;
 }
 
+/** Builds the accommodation-suggestion prompt for the selected location. */
 export async function getAccommodationPrompt(plan: Plan) {
   const location = await prisma.location.findFirst({
     where: { planId: plan.id, isSelected: true },
@@ -73,6 +79,7 @@ export async function getAccommodationPrompt(plan: Plan) {
   `;
 }
 
+/** Builds the activity-suggestion prompt for the selected location. */
 export async function getActivityPrompt(plan: Plan) {
   const location = await prisma.location.findFirst({
     where: { planId: plan.id, isSelected: true },
@@ -114,6 +121,7 @@ export async function getActivityPrompt(plan: Plan) {
   `;
 }
 
+/** Builds the transport-suggestion prompt for the selected location. */
 export async function getTransportPrompt(plan: Plan) {
   const location = await prisma.location.findFirst({
     where: { planId: plan.id, isSelected: true },
@@ -151,6 +159,7 @@ export async function getTransportPrompt(plan: Plan) {
   `;
 }
 
+/** Builds the preference-refiner prompt from the user's raw preferences text. */
 export async function getPreferenceRefinerPrompt(preferences: string) {
   return `
   You should research the preferences of the user based on the following input:

@@ -1,3 +1,7 @@
+/**
+ * POST /api/plans/[planId]/select/accommodation - set the selected accommodation for the plan.
+ * Body: selectAccommodationSchema (accommodationId).
+ */
 import getBody from "@/app/api/lib/getBody";
 import { selectAccommodationSchema } from "@/app/api/routes.schemas";
 import { authenticateRequest, unauthorizedResponse } from "@/lib/auth-utils";

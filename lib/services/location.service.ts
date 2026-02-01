@@ -1,5 +1,10 @@
+/**
+ * Location CRUD and selection for a plan.
+ * The API creates locations, marks one as selected per plan, and fetches by id.
+ */
 import { prisma } from "@/prisma/prisma";
 
+/** Returns the location id if it exists. */
 export async function getLocationById(
   locationId: string
 ): Promise<{ id: string } | null> {
@@ -9,6 +14,7 @@ export async function getLocationById(
   });
 }
 
+/** Creates a location for a plan and returns its id. */
 export async function createLocation(params: {
   planId: string;
   name: string;
@@ -53,6 +59,7 @@ export async function createLocation(params: {
   return location.id;
 }
 
+/** Marks the given location as selected for the plan; clears others. Returns true if successful. */
 export async function selectLocation(
   planId: string,
   locationId: string,

@@ -1,3 +1,7 @@
+/**
+ * Onboarding flow: steps for travel style, budget, trip length, companion, departure, then suggestions.
+ * Shows intro, preference screens, suggestions feed, trip detail, and saved trip review.
+ */
 "use client"
 
 import { useState } from "react"

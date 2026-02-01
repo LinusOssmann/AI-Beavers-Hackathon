@@ -1,3 +1,7 @@
+/**
+ * GET /api/cities/search - city search by name prefix.
+ * Query params: q (required, min 2 chars), limit (optional, 1–20). Returns { cities }.
+ */
 import { NextRequest, NextResponse } from "next/server"
 import { searchCitiesAPI } from "@/lib/services/city.service"
 

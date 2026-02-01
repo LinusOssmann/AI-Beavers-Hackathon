@@ -1,3 +1,7 @@
+/**
+ * PWA manifest for TripMatch.
+ * Defines app name, icons, display mode, and start URL for install and home screen.
+ */
 import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {

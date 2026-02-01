@@ -1,3 +1,7 @@
+/**
+ * GET /api/plans - list plans for the authenticated user.
+ * POST /api/plans - create a plan (userId from auth). Body: createPlanSchema.
+ */
 import getBody from "@/app/api/lib/getBody";
 import { createPlanSchema } from "@/app/api/routes.schemas";
 import { authenticateRequest, unauthorizedResponse } from "@/lib/auth-utils";

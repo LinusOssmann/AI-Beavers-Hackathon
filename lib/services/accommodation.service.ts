@@ -1,3 +1,7 @@
+/**
+ * Accommodation listing and selection for a location.
+ * The API lists accommodations by location, creates new ones, and marks one as selected per plan.
+ */
 import { prisma } from "@/prisma/prisma";
 
 export interface AccommodationListItem {
@@ -11,6 +15,7 @@ export interface AccommodationListItem {
   priceEstimatePerNight: number;
 }
 
+/** Returns accommodations for a location, ordered by creation date. */
 export async function listAccommodationsByLocation(
   locationId: string
 ): Promise<AccommodationListItem[]> {
@@ -38,6 +43,7 @@ export async function listAccommodationsByLocation(
   }));
 }
 
+/** Creates an accommodation for a location and returns its id. */
 export async function createAccommodation(
   locationId: string,
   accommodationName: string,
@@ -67,6 +73,7 @@ export async function createAccommodation(
   return accommodation.id;
 }
 
+/** Marks the given accommodation as selected for the plan; clears others. Returns true if successful. */
 export async function selectAccommodation(
   planId: string,
   accommodationId: string,

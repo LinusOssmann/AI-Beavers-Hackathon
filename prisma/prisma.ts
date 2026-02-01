@@ -1,3 +1,7 @@
+/**
+ * Prisma client backed by a pg Pool.
+ * This is the singleton used for all database access in the app.
+ */
 import { PrismaPg } from "@prisma/adapter-pg";
 import "dotenv/config";
 import { PrismaClient } from "@/generated/prisma/client";

@@ -1,3 +1,7 @@
+/**
+ * Types for city search (GeoDB / RapidAPI).
+ * City is the app shape; GeoCityResponse is the raw API response.
+ */
 export interface City {
   name: string
   country: string

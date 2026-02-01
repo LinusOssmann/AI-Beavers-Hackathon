@@ -1,3 +1,7 @@
+/**
+ * Root layout for the app.
+ * Wires up fonts, PWA service worker, toaster, and analytics.
+ */
 import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register";
 import type { Metadata } from "next";
 import React from "react";

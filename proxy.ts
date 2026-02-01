@@ -1,3 +1,7 @@
+/**
+ * Middleware that protects dashboard routes.
+ * Redirects to sign-in when there is no session cookie.
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 

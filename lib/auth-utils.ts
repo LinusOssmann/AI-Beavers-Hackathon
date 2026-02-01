@@ -46,8 +46,9 @@ export async function authenticateRequest(request: NextRequest): Promise<{
 	};
 }
 
+/** Returns a 401 JSON response when authentication is required but missing or invalid. */
 export function unauthorizedResponse() {
-	return Response.json(
+  return Response.json(
 		{
 			error: "Unauthorized - authentication required (user session or API key)",
 		},
@@ -55,8 +56,9 @@ export function unauthorizedResponse() {
 	);
 }
 
+/** Returns a 403 JSON response when the user lacks permission for the action. */
 export function forbiddenResponse() {
-	return Response.json(
+  return Response.json(
 		{ error: "Forbidden - insufficient permissions" },
 		{ status: 403 },
 	);

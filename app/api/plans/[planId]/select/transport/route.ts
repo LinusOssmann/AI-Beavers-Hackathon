@@ -1,3 +1,7 @@
+/**
+ * POST /api/plans/[planId]/select/transport - set the selected transport for the plan.
+ * Body: selectTransportSchema (transportId).
+ */
 import getBody from "@/app/api/lib/getBody";
 import { selectTransportSchema } from "@/app/api/routes.schemas";
 import { authenticateRequest, unauthorizedResponse } from "@/lib/auth-utils";

@@ -1,3 +1,7 @@
+/**
+ * GET /api/plans/[planId] - fetch a plan with locations, accommodations, activities, transports.
+ * Requires auth; users can only access their own plans.
+ */
 import { authenticateRequest, unauthorizedResponse } from "@/lib/auth-utils";
 import { prisma } from "@/prisma/prisma";
 import { NextRequest, NextResponse } from "next/server";

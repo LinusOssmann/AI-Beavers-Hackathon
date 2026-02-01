@@ -1,3 +1,7 @@
+/**
+ * MCP travel store: facade for destinations, activities, and accommodations.
+ * The store delegates to location, activity, and accommodation services for persistence.
+ */
 import * as accommodationService from "@/lib/services/accommodation.service";
 import * as activityService from "@/lib/services/activity.service";
 import * as locationService from "@/lib/services/location.service";
@@ -47,6 +51,7 @@ function nextId(): string {
   return crypto.randomUUID();
 }
 
+/** Object exposing list/add for activities, accommodations, and destinations. */
 export const travelStore = {
   async listActivityCandidates(
     locationId: string

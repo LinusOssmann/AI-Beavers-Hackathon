@@ -1,3 +1,7 @@
+/**
+ * POST /api/plans/[planId]/select/location - set the selected location for the plan.
+ * Body: selectLocationSchema (locationId).
+ */
 import getBody from "@/app/api/lib/getBody";
 import { selectLocationSchema } from "@/app/api/routes.schemas";
 import { authenticateRequest, unauthorizedResponse } from "@/lib/auth-utils";

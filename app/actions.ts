@@ -1,3 +1,7 @@
+/**
+ * Server actions for PWA push subscriptions and user preferences.
+ * Push subscription is stored in memory here; in production it would be persisted in a database.
+ */
 "use server";
 
 import { auth } from "@/lib/auth";
@@ -19,6 +23,7 @@ if (vapidPublic && vapidPrivate) {
 // Store subscription as JSON-serializable object
 let subscription: PushSubscription | null = null;
 
+/** Stores the push subscription (in memory here; use a DB in production). */
 export async function subscribeUser(sub: {
   endpoint: string;
   keys: {
@@ -32,6 +37,7 @@ export async function subscribeUser(sub: {
   return { success: true };
 }
 
+/** Clears the stored push subscription. */
 export async function unsubscribeUser() {
   subscription = null;
   // In a production environment, you would want to remove the subscription from the database
@@ -39,6 +45,7 @@ export async function unsubscribeUser() {
   return { success: true };
 }
 
+/** Sends a push notification with the given message to the stored subscription. */
 export async function sendNotification(message: string) {
   if (!subscription) {
     throw new Error("No subscription available");
@@ -60,6 +67,7 @@ export async function sendNotification(message: string) {
   }
 }
 
+/** Updates the authenticated user's preferences and marks onboarding complete. */
 export async function updateUserPreferences(
   userId: string,
   preferences: {

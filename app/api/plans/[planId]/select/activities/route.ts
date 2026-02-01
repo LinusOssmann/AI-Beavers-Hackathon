@@ -1,3 +1,7 @@
+/**
+ * POST /api/plans/[planId]/select/activities - set the selected activities for the plan.
+ * Body: selectActivitiesSchema (activityIds array).
+ */
 import getBody from "@/app/api/lib/getBody";
 import { selectActivitiesSchema } from "@/app/api/routes.schemas";
 import { authenticateRequest, unauthorizedResponse } from "@/lib/auth-utils";

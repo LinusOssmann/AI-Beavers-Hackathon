@@ -1,3 +1,7 @@
+/**
+ * Manus API client for creating and retrieving agent tasks.
+ * The API calls the Manus responses endpoint with travel connectors.
+ */
 interface ManusResponseMetadata {
   task_url?: string;
   task_title?: string;
@@ -29,6 +33,7 @@ function travelConnectors(): string[] {
     .filter(Boolean);
 }
 
+/** Fetches the Manus API with the API key in headers. */
 async function manusFetch(path: string, init?: RequestInit): Promise<unknown> {
   const res = await fetch(`${BASE}${path}`, {
     ...init,
@@ -41,6 +46,7 @@ async function manusFetch(path: string, init?: RequestInit): Promise<unknown> {
   return res.json();
 }
 
+/** Creates an agent task with the given prompt and travel connectors. */
 export async function createManusAgentTask(prompt: string): Promise<ManusResponse> {
   return (await manusFetch("", {
     method: "POST",
@@ -54,6 +60,7 @@ export async function createManusAgentTask(prompt: string): Promise<ManusRespons
   })) as ManusResponse;
 }
 
+/** Retrieves the current status and output for a task by id. */
 export async function retrieveManusResponse(taskId: string): Promise<ManusResponse> {
   return (await manusFetch(`/${taskId}`)) as ManusResponse;
 }

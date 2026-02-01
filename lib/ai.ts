@@ -1,3 +1,7 @@
+/**
+ * AI provider for OpenAI-compatible APIs (e.g. Manus).
+ * The module exposes a provider and model for use in AI SDK calls.
+ */
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 
 const baseURL = process.env.AI_OPENAI_COMPATIBLE_BASE_URL;
@@ -10,6 +14,7 @@ export const aiProvider = createOpenAICompatible({
   includeUsage: true,
 });
 
+/** Returns the provider configured for the given model id. */
 export function aiModel(modelId: string) {
   return aiProvider(modelId);
 }

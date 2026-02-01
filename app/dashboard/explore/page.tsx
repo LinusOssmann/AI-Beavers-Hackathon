@@ -1,3 +1,7 @@
+/**
+ * Explore page: location suggestions feed for the authenticated user.
+ * Loads the latest plan and locations and passes them to SuggestionsFeed.
+ */
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";

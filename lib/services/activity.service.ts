@@ -1,3 +1,7 @@
+/**
+ * Activity listing and selection for a location.
+ * The API lists activities by location, creates new ones, and marks selected activities per plan.
+ */
 import { prisma } from "@/prisma/prisma";
 
 export interface ActivityListItem {
@@ -10,6 +14,7 @@ export interface ActivityListItem {
   priceEstimate: number;
 }
 
+/** Returns activities for a location, ordered by creation date. */
 export async function listActivitiesByLocation(
   locationId: string
 ): Promise<ActivityListItem[]> {
@@ -36,6 +41,7 @@ export async function listActivitiesByLocation(
   }));
 }
 
+/** Creates an activity for a location and returns its id. */
 export async function createActivity(
   locationId: string,
   activityName: string,
@@ -63,6 +69,7 @@ export async function createActivity(
   return activity.id;
 }
 
+/** Marks the given activities as selected for the plan. Returns true if all ids exist for the plan. */
 export async function selectActivities(
   planId: string,
   activityIds: string[],
