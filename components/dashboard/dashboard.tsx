@@ -61,22 +61,6 @@ export function Dashboard({ user }: DashboardProps) {
 
 	return (
 		<div className="min-h-screen bg-background">
-			{/* Header */}
-			<header className="border-b">
-				<div className="container mx-auto px-4 py-4 flex items-center justify-between">
-					<div>
-						<h1 className="text-2xl font-semibold">TripMatch</h1>
-						<p className="text-sm text-muted-foreground">
-							Welcome back, {user.name}
-						</p>
-					</div>
-					<Button variant="ghost" size="sm" onClick={handleSignOut}>
-						<LogOut className="w-4 h-4 mr-2" />
-						Sign Out
-					</Button>
-				</div>
-			</header>
-
 			{/* Main Content */}
 			<main className="container mx-auto px-4 py-8">
 				<div className="max-w-4xl mx-auto space-y-8">

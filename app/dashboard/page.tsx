@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/prisma/prisma";
 import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
+import { DashboardContent } from "@/components/dashboard/dashboard-content";
 import { Dashboard } from "@/components/dashboard/dashboard";
 
 export default async function DashboardPage() {
@@ -33,5 +34,30 @@ export default async function DashboardPage() {
 		return <OnboardingFlow userId={session.user.id} />;
 	}
 
-	return <Dashboard user={user} />;
+	// Transform user data
+	const userData = {
+		id: user.id,
+		name: user.name,
+		email: user.email,
+		preferences: user.preferences as
+			| {
+					travelStyles?: string[];
+					budget?: string;
+					tripLength?: string;
+					companion?: string;
+					departureLocation?: string;
+			  }
+			| undefined,
+		plans: user.plans.map((plan) => ({
+			id: plan.id,
+			title: plan.title,
+			description: plan.description || undefined,
+			startDate: plan.startDate || undefined,
+			endDate: plan.endDate || undefined,
+			createdAt: plan.createdAt,
+			updatedAt: plan.updatedAt,
+		})),
+	};
+
+	return <Dashboard user={userData} />;
 }
