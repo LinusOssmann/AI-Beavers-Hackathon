@@ -1,77 +1,37 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import '@khmyznikov/pwa-install'
+import '@khmyznikov/pwa-install';
+import { type PWAInstallElement } from '@khmyznikov/pwa-install';
+import { useRef } from 'react';
+import { Button } from '../ui/button';
 
-export function InstallPrompt() {
-  const pwaInstallRef = useRef<HTMLElementTagNameMap['pwa-install'] | null>(
-    null
-  )
-  const [isLoaded, setIsLoaded] = useState(false)
+function App() {
+  const pwaInstallElement = useRef<PWAInstallElement | null>(null);
 
-  useEffect(() => {
-    // Ensure the web component is loaded
-    if (typeof window !== 'undefined') {
-      import('@khmyznikov/pwa-install')
-        .then(() => {
-          setIsLoaded(true)
-          // Small delay to ensure web component is ready
-          setTimeout(() => {
-            if (pwaInstallRef.current) {
-              // Log component state for debugging
-              console.log('PWA Install Component State:', {
-                isInstallAvailable:
-                  pwaInstallRef.current.isInstallAvailable,
-                isUnderStandaloneMode:
-                  pwaInstallRef.current.isUnderStandaloneMode,
-                isDialogHidden: pwaInstallRef.current.isDialogHidden,
-              })
-            }
-          }, 1000)
-        })
-        .catch((error) => {
-          console.error('Failed to load pwa-install component:', error)
-        })
+  const createDialog = () => {
+    if (pwaInstallElement.current) {
+      pwaInstallElement.current.showDialog(true);
     }
-  }, [])
-
-  const handleManualShow = () => {
-    if (pwaInstallRef.current) {
-      pwaInstallRef.current.showDialog(true)
-    }
-  }
-
-  if (!isLoaded) {
-    return null
-  }
-
+  };
   return (
-    <div className="pwa-install-prompt" style={{ marginBottom: '20px' }}>
-      <pwa-install
-        ref={(el) => {
-          pwaInstallRef.current = el
-        }}
-        install-description="Install TripMatch for a better travel planning experience!"
-        name="TripMatch"
-        description="AI-powered travel app to discover and plan your perfect trip"
-        icon="/android/android-launchericon-512-512.png"
-        use-local-storage="true"
-        manual-chrome="true"
-      ></pwa-install>
-      <button
-        onClick={handleManualShow}
-        style={{
-          marginTop: '10px',
-          padding: '10px 20px',
-          backgroundColor: '#0070f3',
-          color: 'white',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer',
-        }}
+    <>
+      <Button
+        onClick={createDialog}
+        variant="outline"
       >
-        Show Install Dialog
-      </button>
-    </div>
-  )
+        Install TripMatch
+      </Button>
+
+      <pwa-install
+        ref={(element) => {
+          pwaInstallElement.current = element;
+        }}
+        install-description="To get the best experience, install TripMatch on your device. You can get notifications, have a native-like experience, and more."
+        name="TripMatch"
+        description="TripMatch is your personal travel agent. Stop planning trips and let them be planned for you."
+      ></pwa-install>
+    </>
+  );
 }
+
+export default App;
