@@ -1,15 +1,15 @@
-import React from "react";
 import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register";
 import type { Metadata } from "next";
+import React from "react";
 
 import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "sonner";
 import "./globals.css";
 
 import {
-	Rubik as V0_Font_Rubik,
 	IBM_Plex_Mono as V0_Font_IBM_Plex_Mono,
 	Lora as V0_Font_Lora,
+	Rubik as V0_Font_Rubik,
 } from "next/font/google";
 
 // Initialize fonts

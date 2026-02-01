@@ -2,6 +2,7 @@
 
 import { sendNotification, subscribeUser, unsubscribeUser } from '@/app/actions'
 import { Button } from '@/components/ui/button'
+import { Bell, BellOff } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -68,6 +69,7 @@ export function PushNotificationButtons() {
 
       if (!ok.success) throw new Error('There was an error subscribing to push notifications.');
 
+      setSubscription(subscription)
       await sendNotification("You're now getting notifications!");
       toast.success("You're now getting notifications!");
     } catch (e) {
@@ -88,6 +90,7 @@ export function PushNotificationButtons() {
       }
 
       await unsubscribeUser()
+      setSubscription(null)
       toast.success('Notifications disabled.')
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Something went wrong.')
@@ -109,10 +112,12 @@ export function PushNotificationButtons() {
       <div className="flex flex-wrap gap-2 justify-center">
         {!subscription ? (
           <Button variant="outline" className="w-full" onClick={onEnable} disabled={loading}>
+            <Bell className="mr-2 size-4 shrink-0" strokeWidth={2.5} />
             Get Notifications
           </Button>
         ) : (
           <Button variant="outline" className="w-full" onClick={onDisable} disabled={loading}>
+            <BellOff className="mr-2 size-4 shrink-0" strokeWidth={2.5} />
             Stop Notifications
           </Button>
         )}
