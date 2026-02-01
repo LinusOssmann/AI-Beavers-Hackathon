@@ -1,0 +1,415 @@
+"use client"
+
+import { useState } from "react"
+import Image from "next/image"
+import {
+  ChevronLeft,
+  ChevronDown,
+  Calendar,
+  DollarSign,
+  MapPin,
+  Plane,
+  Train,
+  Star,
+  Clock,
+  Pencil,
+  Check,
+} from "lucide-react"
+import type { SavedTripData } from "./trip-detail"
+
+interface SavedTripReviewProps {
+  savedTrip: SavedTripData
+  onBack: () => void
+  onEdit: () => void
+}
+
+export function SavedTripReview({ savedTrip, onBack, onEdit }: SavedTripReviewProps) {
+  const { trip, transport, accommodation, itinerary, generatedItinerary } = savedTrip
+  const [expandedDays, setExpandedDays] = useState<number[]>(
+    generatedItinerary ? generatedItinerary.map(d => d.day) : []
+  )
+
+  const totalPrice = (transport?.price || 0) + (accommodation?.totalPrice || 0)
+
+  const toggleDay = (day: number) => {
+    setExpandedDays(prev => 
+      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+    )
+  }
+
+  const getActivityTypeIcon = (type: string) => {
+    switch (type) {
+      case 'meal': return '🍽️'
+      case 'transport': return '✈️'
+      case 'activity': return '🎯'
+      case 'free': return '⭐'
+      default: return '📍'
+    }
+  }
+
+  const getActivityTypeColor = (type: string) => {
+    switch (type) {
+      case 'meal': return 'bg-orange-50 text-orange-700 border-orange-200'
+      case 'transport': return 'bg-blue-50 text-blue-700 border-blue-200'
+      case 'activity': return 'bg-green-50 text-green-700 border-green-200'
+      case 'free': return 'bg-purple-50 text-purple-700 border-purple-200'
+      default: return 'bg-gray-50 text-gray-700 border-gray-200'
+    }
+  }
+
+  const getCategoryLabel = (category: string) => {
+    switch (category) {
+      case "budget": return "Budget"
+      case "comfort": return "Comfort"
+      case "premium": return "Premium"
+      default: return category
+    }
+  }
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case "budget": return "bg-green-100 text-green-800"
+      case "comfort": return "bg-blue-100 text-blue-800"
+      case "premium": return "bg-amber-100 text-amber-800"
+      default: return "bg-secondary text-foreground"
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-background pb-24">
+      {/* Back button */}
+      <div className="px-8 md:px-16 lg:px-24 xl:px-32 py-6 md:py-8">
+        <div className="max-w-[1400px] mx-auto">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium"
+          >
+            <ChevronLeft className="w-5 h-5" />
+            <span>Back to My Itineraries</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Hero Image */}
+      <div className="px-8 md:px-16 lg:px-24 xl:px-32 pb-12">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="relative h-[300px] md:h-[400px] rounded-xl overflow-hidden">
+            <Image
+              src={trip.heroImage || "/placeholder.svg"}
+              alt={trip.destination}
+              fill
+              className="object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            <div className="absolute bottom-6 left-6 right-6">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="inline-block px-3 py-1.5 rounded-lg bg-white/90 text-foreground text-sm font-medium">
+                  {trip.travelStyle}
+                </span>
+                <span className="inline-block px-3 py-1.5 rounded-lg bg-green-500 text-white text-sm font-medium">
+                  <Check className="w-3.5 h-3.5 inline mr-1" />
+                  Generated
+                </span>
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold text-white">
+                {trip.title}
+              </h1>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="px-8 md:px-16 lg:px-24 xl:px-32">
+        <div className="max-w-[1400px] mx-auto space-y-10">
+          
+          {/* Trip Overview */}
+          <section className="space-y-4">
+            <div className="flex items-center gap-2 text-muted-foreground flex-wrap">
+              <div className="flex items-center gap-1.5">
+                <MapPin className="w-4 h-4" />
+                <span className="text-sm">{trip.destination}</span>
+              </div>
+              <span className="text-sm">-</span>
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-4 h-4" />
+                <span className="text-sm">{trip.dates}</span>
+              </div>
+              <span className="text-sm">-</span>
+              <div className="flex items-center gap-1.5">
+                <DollarSign className="w-4 h-4" />
+                <span className="text-sm font-semibold text-foreground">
+                  ${totalPrice.toLocaleString()} total
+                </span>
+              </div>
+            </div>
+
+            <p className="text-muted-foreground leading-relaxed">
+              {trip.description}
+            </p>
+          </section>
+
+          {/* Your Selections Header */}
+          <div className="flex items-center justify-between border-b border-border pb-4">
+            <h2 className="text-xl font-bold text-foreground">Your selections</h2>
+            <button
+              onClick={onEdit}
+              className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors font-medium"
+            >
+              <Pencil className="w-4 h-4" />
+              <span>Edit trip</span>
+            </button>
+          </div>
+
+          {/* Transportation */}
+          {transport && (
+            <section>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Transportation</h3>
+              <div className="p-5 rounded-xl border-2 border-border bg-card">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-lg bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0">
+                    {transport.type === "flight" ? (
+                      <Plane className="w-5 h-5" />
+                    ) : (
+                      <Train className="w-5 h-5" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-foreground text-lg">{transport.carrier}</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {transport.from} to {transport.to}
+                    </p>
+                    <div className="flex items-center gap-3 mt-3 text-sm text-muted-foreground flex-wrap">
+                      <span>{transport.departureDate}</span>
+                      <span>-</span>
+                      <span>{transport.departureTime} - {transport.arrivalTime}</span>
+                      <span>-</span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" />
+                        {transport.duration}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-foreground">${transport.price}</p>
+                    <p className="text-xs text-muted-foreground">per person</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Accommodation */}
+          {accommodation && (
+            <section>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Accommodation</h3>
+              <div className="rounded-xl border-2 border-border bg-card overflow-hidden">
+                <div className="flex flex-col sm:flex-row">
+                  <div className="relative w-full sm:w-56 h-48 sm:h-auto flex-shrink-0">
+                    <Image
+                      src={accommodation.image || "/placeholder.svg"}
+                      alt={accommodation.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 p-5">
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <span className={`inline-block text-xs font-semibold px-3 py-1 rounded-lg ${getCategoryColor(accommodation.category)}`}>
+                        {getCategoryLabel(accommodation.category)}
+                      </span>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-foreground">${accommodation.totalPrice}</p>
+                        <p className="text-xs text-muted-foreground">total</p>
+                      </div>
+                    </div>
+
+                    <h4 className="font-bold text-foreground text-xl mb-1">{accommodation.name}</h4>
+                    <p className="text-sm text-muted-foreground mb-3">{accommodation.location}</p>
+                    
+                    <div className="flex items-center gap-1.5 mb-4">
+                      <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                      <span className="text-sm font-semibold text-foreground">{accommodation.rating}</span>
+                      <span className="text-sm text-muted-foreground">({accommodation.reviewCount})</span>
+                    </div>
+
+                    <p className="text-sm text-muted-foreground mb-3">
+                      ${accommodation.pricePerNight} per night
+                    </p>
+                    
+                    <div className="flex flex-wrap gap-2">
+                      {accommodation.amenities.map((amenity) => (
+                        <span
+                          key={amenity}
+                          className="text-xs bg-secondary text-foreground px-3 py-1 rounded-lg border border-border"
+                        >
+                          {amenity}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Generated Day-by-Day Itinerary */}
+          {generatedItinerary && generatedItinerary.length > 0 && (
+            <section>
+              <h3 className="text-lg font-semibold text-foreground mb-4">
+                Your {generatedItinerary.length}-Day Itinerary
+              </h3>
+              <div className="space-y-3">
+                {generatedItinerary.map((day) => {
+                  const isExpanded = expandedDays.includes(day.day)
+                  return (
+                    <div 
+                      key={day.day} 
+                      className="bg-card border border-border rounded-xl overflow-hidden"
+                    >
+                      <button
+                        onClick={() => toggleDay(day.day)}
+                        className="w-full px-5 py-4 flex items-center justify-between hover:bg-secondary/30 transition-colors"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
+                            {day.day}
+                          </div>
+                          <div className="text-left">
+                            <h4 className="font-bold text-foreground">{day.title}</h4>
+                            <p className="text-sm text-muted-foreground">{day.date} - {day.activities.length} activities</p>
+                          </div>
+                        </div>
+                        <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {isExpanded && (
+                        <div className="px-5 pb-5 border-t border-border">
+                          <div className="relative pl-8 pt-4">
+                            {/* Timeline line */}
+                            <div className="absolute left-3 top-6 bottom-2 w-0.5 bg-border" />
+                            
+                            <div className="space-y-4">
+                              {day.activities.map((activity, index) => (
+                                <div key={activity.id} className="relative">
+                                  {/* Timeline dot */}
+                                  <div className="absolute -left-5 top-1 w-4 h-4 rounded-full bg-background border-2 border-primary flex items-center justify-center">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                  </div>
+
+                                  <div className={`p-4 rounded-lg border ${getActivityTypeColor(activity.type)}`}>
+                                    <div className="flex items-start justify-between gap-3 mb-2">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-base">{getActivityTypeIcon(activity.type)}</span>
+                                        <span className="text-sm font-medium">{activity.time}</span>
+                                      </div>
+                                      <span className="text-xs px-2 py-0.5 rounded bg-background/50 capitalize">
+                                        {activity.type}
+                                      </span>
+                                    </div>
+                                    <h5 className="font-semibold text-foreground mb-1">{activity.title}</h5>
+                                    <p className="text-sm text-muted-foreground mb-2">{activity.description}</p>
+                                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                      <span className="flex items-center gap-1">
+                                        <MapPin className="w-3 h-3" />
+                                        {activity.location}
+                                      </span>
+                                      <span className="flex items-center gap-1">
+                                        <Clock className="w-3 h-3" />
+                                        {activity.duration}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* Selected Activities (if no generated itinerary) */}
+          {(!generatedItinerary || generatedItinerary.length === 0) && itinerary.length > 0 && (
+            <section>
+              <h3 className="text-lg font-semibold text-foreground mb-4">
+                Planned activities ({itinerary.length})
+              </h3>
+              <div className="space-y-3">
+                {itinerary.map((item) => (
+                  <div
+                    key={item.id}
+                    className="p-4 rounded-xl border-2 border-border bg-card"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                        <Image
+                          src={item.image || "/placeholder.svg"}
+                          alt={item.title}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs bg-secondary text-foreground px-2 py-1 rounded border border-border font-medium">
+                            {item.tag}
+                          </span>
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Clock className="w-3 h-3" />
+                            <span>{item.duration}</span>
+                          </div>
+                        </div>
+                        <h4 className="font-bold text-foreground mb-1">
+                          {item.title}
+                        </h4>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* No selections message */}
+          {!transport && !accommodation && itinerary.length === 0 && !generatedItinerary && (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground mb-4">No selections made for this trip yet.</p>
+              <button
+                onClick={onEdit}
+                className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity"
+              >
+                Add selections
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Sticky Bottom CTA */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border shadow-lg z-40">
+        <div className="px-8 md:px-16 lg:px-24 xl:px-32 py-4">
+          <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Total estimated cost</p>
+              <p className="text-2xl font-bold text-foreground">${totalPrice.toLocaleString()}</p>
+            </div>
+            <button
+              onClick={onEdit}
+              className="bg-primary text-primary-foreground px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity shadow-md"
+            >
+              Edit trip
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
