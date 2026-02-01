@@ -13,6 +13,7 @@ export default async function DestinationOverviewPage({
 }: DestinationOverviewPageProps) {
 	const session = await auth.api.getSession({ headers: await headers() });
 	if (!session) redirect("/sign-in");
+	if (!params.locationId || params.locationId === "undefined") notFound();
 
 	const location = await prisma.location.findUnique({
 		where: { id: params.locationId },
