@@ -7,7 +7,7 @@ import "dotenv/config";
 import { PrismaClient } from "@/generated/prisma/client";
 import { Pool } from "pg";
 
-const connectionString = `${process.env.DATABASE_URL}`;
+const connectionString = `${process.env.DATABASE_URL ?? ""}`;
 
 // Create a proper pg.Pool instance
 const pool = new Pool({
