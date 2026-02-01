@@ -8,19 +8,20 @@ interface DepartureScreenProps {
   value: string
   onChange: (location: string) => void
   onComplete: () => void
+  isLoading?: boolean
 }
 
-export function DepartureScreen({ value, onChange, onComplete }: DepartureScreenProps) {
+export function DepartureScreen({ value, onChange, onComplete, isLoading: isSaving = false }: DepartureScreenProps) {
   const [isFocused, setIsFocused] = useState(false)
   const [suggestions, setSuggestions] = useState<string[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingCities, setIsLoadingCities] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     // Debounce and fetch cities from API
     const timer = setTimeout(async () => {
       if (value && isFocused && value.length >= 2) {
-        setIsLoading(true)
+        setIsLoadingCities(true)
         try {
           const response = await fetch(`/api/cities/search?q=${encodeURIComponent(value)}&limit=5`)
           if (response.ok) {
@@ -34,11 +35,11 @@ export function DepartureScreen({ value, onChange, onComplete }: DepartureScreen
           console.error("Error fetching cities:", error)
           setSuggestions([])
         } finally {
-          setIsLoading(false)
+          setIsLoadingCities(false)
         }
       } else {
         setSuggestions([])
-        setIsLoading(false)
+        setIsLoadingCities(false)
       }
     }, 300)
 
@@ -78,9 +79,9 @@ export function DepartureScreen({ value, onChange, onComplete }: DepartureScreen
             />
           </div>
           
-          {(suggestions.length > 0 || isLoading) && (
+          {(suggestions.length > 0 || isLoadingCities) && (
             <div className="absolute top-full left-0 right-0 mt-2 bg-card border-2 border-border rounded-lg overflow-hidden z-10 shadow-md">
-              {isLoading ? (
+              {isLoadingCities ? (
                 <div className="flex items-center justify-center px-4 py-3 text-muted-foreground">
                   <Loader2 className="w-4 h-4 animate-spin mr-2" />
                   <span className="text-sm">Searching cities...</span>
@@ -104,10 +105,10 @@ export function DepartureScreen({ value, onChange, onComplete }: DepartureScreen
       <div className="mt-8">
         <button
           onClick={onComplete}
-          disabled={!value.trim()}
+          disabled={!value.trim() || isSaving}
           className="w-full bg-primary text-primary-foreground py-4 px-6 text-base font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          See my travel ideas
+          {isSaving ? 'Saving preferences...' : 'See my travel ideas'}
         </button>
       </div>
     </div>

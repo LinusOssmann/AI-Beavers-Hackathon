@@ -13,10 +13,14 @@ export default async function ExplorePage() {
 		select: {
 			id: true,
 			preferences: true,
+			preferenceSummary: true,
 		},
 	});
 
 	if (!user) redirect("/");
+
+	// Check if summary needs regeneration
+	const needsSummary = !user.preferenceSummary && user.preferences !== null;
 
 	// Get user's most recent plan (if any) to show existing suggestions
 	const latestPlan = await prisma.plan.findFirst({
@@ -33,6 +37,8 @@ export default async function ExplorePage() {
 		<SuggestionsFeed
 			userId={session.user.id}
 			userPreferences={user.preferences as any}
+			preferenceSummary={user.preferenceSummary}
+			needsSummaryRegeneration={needsSummary}
 			existingPlanId={latestPlan?.id}
 			initialLocations={latestPlan?.locations || []}
 		/>

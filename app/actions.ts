@@ -19,6 +19,14 @@ if (vapidPublic && vapidPrivate) {
 // Store subscription as JSON-serializable object
 let subscription: PushSubscription | null = null;
 
+interface OnboardingPreferences {
+  travelStyles?: string[];
+  budget?: string;
+  tripLength?: string;
+  companion?: string;
+  departureLocation?: string;
+}
+
 export async function subscribeUser(sub: {
   endpoint: string;
   keys: {
@@ -62,13 +70,7 @@ export async function sendNotification(message: string) {
 
 export async function updateUserPreferences(
   userId: string,
-  preferences: {
-    travelStyles?: string[];
-    budget?: string;
-    tripLength?: string;
-    companion?: string;
-    departureLocation?: string;
-  }
+  preferences: OnboardingPreferences
 ) {
   try {
     // Verify the authenticated user matches the userId
@@ -84,7 +86,7 @@ export async function updateUserPreferences(
     await prisma.user.update({
       where: { id: userId },
       data: {
-        preferences,
+        preferences: preferences as any,
         onboardingComplete: true,
         updatedAt: new Date(),
       },
@@ -94,5 +96,77 @@ export async function updateUserPreferences(
   } catch (error) {
     console.error("Error updating user preferences:", error);
     return { success: false, error: "Failed to save preferences" };
+  }
+}
+
+function formatPreferencesForAI(preferences: OnboardingPreferences): string {
+  return `
+Travel Styles: ${preferences.travelStyles?.join(', ') || 'Not specified'}
+Budget: ${preferences.budget || 'Not specified'}
+Trip Length: ${preferences.tripLength || 'Not specified'}
+Traveling With: ${preferences.companion || 'Not specified'}
+Departure Location: ${preferences.departureLocation || 'Not specified'}
+  `.trim()
+}
+
+export async function generatePreferenceSummary(
+  userId: string,
+  preferences: OnboardingPreferences
+): Promise<{ success: boolean; taskId?: string; error?: string }> {
+  try {
+    // Verify the authenticated user matches the userId
+    const session = await auth.api.getSession({
+      headers: await headers()
+    })
+
+    if (!session?.user || session.user.id !== userId) {
+      return { success: false, error: 'Unauthorized' }
+    }
+
+    // Format preferences into readable string
+    const preferencesText = formatPreferencesForAI(preferences)
+
+    // Call preference refiner endpoint
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const response = await fetch(`${baseUrl}/preference-refiner`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ preferences: preferencesText })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to start preference refiner')
+    }
+
+    const result = await response.json()
+    return { success: true, taskId: result.responseId }
+  } catch (error) {
+    console.error('Error generating preference summary:', error)
+    return { success: false, error: 'Failed to generate summary' }
+  }
+}
+
+export async function savePreferenceSummary(
+  userId: string,
+  summary: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers()
+    })
+
+    if (!session?.user || session.user.id !== userId) {
+      return { success: false, error: 'Unauthorized' }
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { preferenceSummary: summary }
+    })
+
+    return { success: true }
+  } catch (error) {
+    console.error('Error saving preference summary:', error)
+    return { success: false, error: 'Failed to save summary' }
   }
 }
