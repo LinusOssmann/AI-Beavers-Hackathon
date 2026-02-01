@@ -22,8 +22,7 @@ export function LocationCard({
 	return (
 		<button
 			onClick={onClick}
-			disabled={isResearching}
-			className="w-full h-full text-left bg-card overflow-hidden border border-border hover:border-muted-foreground shadow-sm hover:shadow-md transition-all duration-200 group rounded-md flex flex-col disabled:opacity-50"
+			className="w-full h-full text-left bg-card overflow-hidden border border-border hover:border-muted-foreground shadow-sm hover:shadow-md transition-all duration-200 group rounded-md flex flex-col"
 		>
 			{/* Hero Image */}
 			<div className="relative aspect-[4/3] overflow-hidden bg-muted flex-shrink-0">

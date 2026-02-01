@@ -304,7 +304,7 @@ export function SuggestionsFeed({
 			(isPollingResearch && location.isSelected);
 
 		if (isResearchRunningForLocation || location.isSelected) {
-			router.push(`/dashboard/explore/${planId}?locationId=${location.id}`);
+			router.push(`/dashboard/explore/destination/${location.id}`);
 			return;
 		}
 
