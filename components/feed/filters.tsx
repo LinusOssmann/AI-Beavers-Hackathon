@@ -11,7 +11,9 @@ import {
   ChevronDown,
   Search,
   Users,
+  Loader2,
 } from "lucide-react"
+import type { City } from "@/types/city"
 
 export interface FilterState {
   destination: string
@@ -54,77 +56,76 @@ const TRAVEL_STYLE_OPTIONS = [
   { id: "family", label: "Family Trip", emoji: "👨‍👩‍👧‍👦" },
 ]
 
-const LOCATION_SUGGESTIONS = [
-  "Portugal",
-  "Switzerland",
-  "Italy",
-  "Indonesia",
-  "Thailand",
-  "Iceland",
-  "France",
-  "Japan",
-  "Spain",
-  "Greece",
-  "Morocco",
-  "New Zealand",
-]
-
-const STARTING_POINT_SUGGESTIONS = [
-  "New York, USA",
-  "Los Angeles, USA",
-  "London, UK",
-  "Paris, France",
-  "Berlin, Germany",
-  "Amsterdam, Netherlands",
-  "Sydney, Australia",
-  "Tokyo, Japan",
-]
-
 export function Filters({ filters, onApply, onReset }: FiltersProps) {
   const [localFilters, setLocalFilters] = useState<FilterState>(filters)
   const [showMoreFiltersModal, setShowMoreFiltersModal] = useState(false)
   const [showLocationDropdown, setShowLocationDropdown] = useState(false)
   const [showStartingPointDropdown, setShowStartingPointDropdown] = useState(false)
   const [showDatePicker, setShowDatePicker] = useState(false)
-  const [locationSuggestions, setLocationSuggestions] = useState<string[]>(LOCATION_SUGGESTIONS)
-  const [startingPointSuggestions, setStartingPointSuggestions] = useState<string[]>(STARTING_POINT_SUGGESTIONS)
-  const [debouncedDestination, setDebouncedDestination] = useState(localFilters.destination)
+  const [locationSuggestions, setLocationSuggestions] = useState<string[]>([])
+  const [startingPointSuggestions, setStartingPointSuggestions] = useState<string[]>([])
+  const [isLoadingDestination, setIsLoadingDestination] = useState(false)
+  const [isLoadingStartingPoint, setIsLoadingStartingPoint] = useState(false)
   const [isApplying, setIsApplying] = useState(false)
 
   useEffect(() => {
     setLocalFilters(filters)
   }, [filters])
 
-  // Debounce destination input
+  // Debounce and fetch destination cities
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedDestination(localFilters.destination)
+    const timer = setTimeout(async () => {
+      if (localFilters.destination && localFilters.destination.length >= 2) {
+        setIsLoadingDestination(true)
+        try {
+          const response = await fetch(`/api/cities/search?q=${encodeURIComponent(localFilters.destination)}&limit=10`)
+          if (response.ok) {
+            const data = await response.json()
+            const cityNames = data.cities.map((city: City) => `${city.name}, ${city.country}`)
+            setLocationSuggestions(cityNames)
+          } else {
+            setLocationSuggestions([])
+          }
+        } catch (error) {
+          console.error("Error fetching destination cities:", error)
+          setLocationSuggestions([])
+        } finally {
+          setIsLoadingDestination(false)
+        }
+      } else {
+        setLocationSuggestions([])
+        setIsLoadingDestination(false)
+      }
     }, 300)
     return () => clearTimeout(timer)
   }, [localFilters.destination])
 
-  // Filter location suggestions
+  // Debounce and fetch starting point cities
   useEffect(() => {
-    if (debouncedDestination) {
-      const filtered = LOCATION_SUGGESTIONS.filter((loc) =>
-        loc.toLowerCase().includes(debouncedDestination.toLowerCase())
-      )
-      setLocationSuggestions(filtered)
-    } else {
-      setLocationSuggestions(LOCATION_SUGGESTIONS)
-    }
-  }, [debouncedDestination])
-
-  // Filter starting point suggestions
-  useEffect(() => {
-    if (localFilters.startingPoint) {
-      const filtered = STARTING_POINT_SUGGESTIONS.filter((loc) =>
-        loc.toLowerCase().includes(localFilters.startingPoint.toLowerCase())
-      )
-      setStartingPointSuggestions(filtered)
-    } else {
-      setStartingPointSuggestions(STARTING_POINT_SUGGESTIONS)
-    }
+    const timer = setTimeout(async () => {
+      if (localFilters.startingPoint && localFilters.startingPoint.length >= 2) {
+        setIsLoadingStartingPoint(true)
+        try {
+          const response = await fetch(`/api/cities/search?q=${encodeURIComponent(localFilters.startingPoint)}&limit=10`)
+          if (response.ok) {
+            const data = await response.json()
+            const cityNames = data.cities.map((city: City) => `${city.name}, ${city.country}`)
+            setStartingPointSuggestions(cityNames)
+          } else {
+            setStartingPointSuggestions([])
+          }
+        } catch (error) {
+          console.error("Error fetching starting point cities:", error)
+          setStartingPointSuggestions([])
+        } finally {
+          setIsLoadingStartingPoint(false)
+        }
+      } else {
+        setStartingPointSuggestions([])
+        setIsLoadingStartingPoint(false)
+      }
+    }, 300)
+    return () => clearTimeout(timer)
   }, [localFilters.startingPoint])
 
   // Close dropdowns on escape key
@@ -302,17 +303,24 @@ export function Filters({ filters, onApply, onReset }: FiltersProps) {
                 </button>
               )}
             </div>
-            {showLocationDropdown && locationSuggestions.length > 0 && (
+            {showLocationDropdown && (locationSuggestions.length > 0 || isLoadingDestination) && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-30 max-h-60 overflow-y-auto">
-                {locationSuggestions.map((loc) => (
-                  <button
-                    key={loc}
-                    onMouseDown={() => selectLocation(loc)}
-                    className="w-full text-left px-3 py-2 hover:bg-secondary transition-colors text-sm text-foreground"
-                  >
-                    {loc}
-                  </button>
-                ))}
+                {isLoadingDestination ? (
+                  <div className="flex items-center justify-center px-3 py-2 text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    <span className="text-sm">Searching cities...</span>
+                  </div>
+                ) : locationSuggestions.length > 0 ? (
+                  locationSuggestions.map((loc) => (
+                    <button
+                      key={loc}
+                      onMouseDown={() => selectLocation(loc)}
+                      className="w-full text-left px-3 py-2 hover:bg-secondary transition-colors text-sm text-foreground"
+                    >
+                      {loc}
+                    </button>
+                  ))
+                ) : null}
               </div>
             )}
           </div>
@@ -372,7 +380,7 @@ export function Filters({ filters, onApply, onReset }: FiltersProps) {
           {/* Travelers */}
           <div className="flex-none w-36">
             <div className="flex items-center px-3 py-2.5 bg-card rounded-lg border border-border gap-2">
-              <Users className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              <Users className="w-4 h-4 text-muted-foreground shrink-0" />
               <div className="flex items-center justify-between flex-1 gap-1.5">
                 <button
                   onClick={() =>
@@ -509,17 +517,24 @@ export function Filters({ filters, onApply, onReset }: FiltersProps) {
                       </button>
                     )}
                   </div>
-                  {showStartingPointDropdown && startingPointSuggestions.length > 0 && (
+                  {showStartingPointDropdown && (startingPointSuggestions.length > 0 || isLoadingStartingPoint) && (
                     <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-xl z-30 max-h-48 overflow-y-auto">
-                      {startingPointSuggestions.map((loc) => (
-                        <button
-                          key={loc}
-                          onMouseDown={() => selectStartingPoint(loc)}
-                          className="w-full text-left px-3 py-2 hover:bg-secondary transition-colors text-sm text-foreground"
-                        >
-                          {loc}
-                        </button>
-                      ))}
+                      {isLoadingStartingPoint ? (
+                        <div className="flex items-center justify-center px-3 py-2 text-muted-foreground">
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          <span className="text-sm">Searching cities...</span>
+                        </div>
+                      ) : startingPointSuggestions.length > 0 ? (
+                        startingPointSuggestions.map((loc) => (
+                          <button
+                            key={loc}
+                            onMouseDown={() => selectStartingPoint(loc)}
+                            className="w-full text-left px-3 py-2 hover:bg-secondary transition-colors text-sm text-foreground"
+                          >
+                            {loc}
+                          </button>
+                        ))
+                      ) : null}
                     </div>
                   )}
                 </div>
