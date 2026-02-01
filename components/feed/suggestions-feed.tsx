@@ -309,12 +309,15 @@ export function SuggestionsFeed({
 			console.error("Missing location id for destination navigation", location);
 			return;
 		}
+		const destinationPath = `/dashboard/explore/destination/${encodeURIComponent(
+			location.id,
+		)}`;
 		const isResearchRunningForLocation =
 			researchRequestsRef.current.has(location.id) ||
 			(isPollingResearch && location.isSelected);
 
 		if (isResearchRunningForLocation || location.isSelected) {
-			router.push(`/dashboard/explore/destination/${location.id}`);
+			router.push(destinationPath);
 			return;
 		}
 

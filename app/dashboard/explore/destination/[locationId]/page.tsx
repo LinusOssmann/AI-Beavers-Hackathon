@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/prisma/prisma";
@@ -13,7 +13,9 @@ export default async function DestinationOverviewPage({
 }: DestinationOverviewPageProps) {
 	const session = await auth.api.getSession({ headers: await headers() });
 	if (!session) redirect("/sign-in");
-	if (!params.locationId || params.locationId === "undefined") notFound();
+	if (!params.locationId || params.locationId === "undefined") {
+		redirect("/dashboard/explore");
+	}
 
 	const location = await prisma.location.findUnique({
 		where: { id: params.locationId },
@@ -25,8 +27,8 @@ export default async function DestinationOverviewPage({
 		},
 	});
 
-	if (!location) notFound();
-	if (location.plan.userId !== session.user.id) notFound();
+	if (!location) redirect("/dashboard/explore");
+	if (location.plan.userId !== session.user.id) redirect("/dashboard/explore");
 
 	const { plan: _plan, ...locationData } = location;
 
