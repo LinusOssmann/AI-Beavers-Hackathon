@@ -10,10 +10,13 @@ import { Sparkles, Loader2, Compass } from "lucide-react";
 import { Filters, type FilterState } from "./filters";
 import { LocationCard } from "./location-card";
 import type { Location } from "@/generated/prisma/client";
+import { generatePreferenceSummary, savePreferenceSummary } from "@/app/actions";
 
 interface SuggestionsFeedProps {
 	userId: string;
 	userPreferences: any;
+	preferenceSummary: string | null;
+	needsSummaryRegeneration?: boolean;
 	existingPlanId?: string;
 	initialLocations?: Location[];
 }
@@ -36,6 +39,8 @@ const DEFAULT_FILTERS: FilterState = {
 export function SuggestionsFeed({
 	userId,
 	userPreferences,
+	preferenceSummary,
+	needsSummaryRegeneration = false,
 	existingPlanId,
 	initialLocations = [],
 }: SuggestionsFeedProps) {
@@ -50,6 +55,67 @@ export function SuggestionsFeed({
 	const [taskStatus, setTaskStatus] = useState("");
 	const [appliedFilters, setAppliedFilters] =
 		useState<FilterState>(DEFAULT_FILTERS);
+	const [summary, setSummary] = useState(preferenceSummary);
+	const [isRegeneratingSummary, setIsRegeneratingSummary] = useState(false);
+
+	// Regenerate summary if missing
+	useEffect(() => {
+		if (needsSummaryRegeneration && !summary && !isRegeneratingSummary) {
+			handleRegenerateSummary();
+		}
+	}, [needsSummaryRegeneration, summary]);
+
+	const handleRegenerateSummary = async () => {
+		if (!userPreferences) return;
+		
+		setIsRegeneratingSummary(true);
+		const result = await generatePreferenceSummary(userId, userPreferences);
+		
+		if (result.success && result.taskId) {
+			pollForSummary(result.taskId);
+		} else {
+			setIsRegeneratingSummary(false);
+		}
+	};
+
+	const pollForSummary = async (taskId: string) => {
+		const maxAttempts = 40; // 2 minutes max
+		let attempts = 0;
+
+		const poll = async () => {
+			if (attempts >= maxAttempts) {
+				setIsRegeneratingSummary(false);
+				return;
+			}
+
+			try {
+				const response = await fetch(`/check-status?responseId=${taskId}`);
+				const data = await response.json();
+
+				if (data.status === "completed") {
+					setIsRegeneratingSummary(false);
+					if (data.result) {
+						await savePreferenceSummary(userId, data.result);
+						setSummary(data.result);
+					}
+					return;
+				} else if (data.status === "failed") {
+					setIsRegeneratingSummary(false);
+					console.error("Summary generation failed");
+					return;
+				}
+
+				// Continue polling
+				attempts++;
+				setTimeout(poll, 3000);
+			} catch (error) {
+				console.error("Polling error:", error);
+				setIsRegeneratingSummary(false);
+			}
+		};
+
+		poll();
+	};
 
 	// Poll for location suggestions
 	useEffect(() => {
@@ -137,7 +203,7 @@ export function SuggestionsFeed({
 				body: JSON.stringify({
 					planId: plan.id,
 					preferences: JSON.stringify(userPreferences),
-					preferenceSummary: "",
+					preferenceSummary: summary || "",
 				}),
 			});
 
@@ -171,7 +237,7 @@ export function SuggestionsFeed({
 				body: JSON.stringify({
 					planId,
 					preferences: JSON.stringify(userPreferences),
-					preferenceSummary: "",
+					preferenceSummary: summary || "",
 				}),
 			});
 
@@ -208,7 +274,7 @@ export function SuggestionsFeed({
 					locationId: location.id,
 					destination: { name: location.name, country: location.country },
 					preferences: JSON.stringify(userPreferences),
-					preferenceSummary: "",
+					preferenceSummary: summary || "",
 				}),
 			});
 

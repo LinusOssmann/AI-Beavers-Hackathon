@@ -12,6 +12,12 @@ export async function getLocationPrompt(plan: Plan) {
   });
   if (!user) throw new Error("The user for this plan wasn't found.");
 
+  // Use preference summary if available, otherwise fall back to raw preferences
+  const preferenceContext = user.preferenceSummary || 
+    (typeof user.preferences === 'object' && user.preferences !== null 
+      ? JSON.stringify(user.preferences) 
+      : 'No preferences specified');
+
   return `
   You are a helpful assistant that helps users find the best location for their trip.
 
@@ -21,7 +27,7 @@ export async function getLocationPrompt(plan: Plan) {
   ${plan.description}
 
   The user's preferences are...
-  ${user.preferences}
+  ${preferenceContext}
 
   The user would like to travel from ${plan.startDate} to ${plan.endDate}.
 
@@ -49,6 +55,12 @@ export async function getAccommodationPrompt(plan: Plan) {
   });
   if (!user) throw new Error("The user for this plan wasn't found.");
 
+  // Use preference summary if available, otherwise fall back to raw preferences
+  const preferenceContext = user.preferenceSummary || 
+    (typeof user.preferences === 'object' && user.preferences !== null 
+      ? JSON.stringify(user.preferences) 
+      : 'No preferences specified');
+
   return `
   You are a helpful assistant that helps users find the best accommodations for their trip.
 
@@ -58,7 +70,7 @@ export async function getAccommodationPrompt(plan: Plan) {
   ${plan.description}
 
   The user's preferences are...
-  ${user.preferences}
+  ${preferenceContext}
 
   The user would like to travel from ${plan.startDate} to ${plan.endDate}.
 
@@ -91,6 +103,12 @@ export async function getActivityPrompt(plan: Plan) {
   });
   if (!user) throw new Error("The user for this plan wasn't found.");
 
+  // Use preference summary if available, otherwise fall back to raw preferences
+  const preferenceContext = user.preferenceSummary || 
+    (typeof user.preferences === 'object' && user.preferences !== null 
+      ? JSON.stringify(user.preferences) 
+      : 'No preferences specified');
+
   return `
   You are a helpful assistant that helps users find the best activities and experiences for their trip.
 
@@ -100,7 +118,7 @@ export async function getActivityPrompt(plan: Plan) {
   ${plan.description}
 
   The user's preferences are...
-  ${user.preferences}
+  ${preferenceContext}
 
   The user would like to travel from ${plan.startDate} to ${plan.endDate}.
 
@@ -133,6 +151,12 @@ export async function getTransportPrompt(plan: Plan) {
   });
   if (!user) throw new Error("The user for this plan wasn't found.");
 
+  // Use preference summary if available, otherwise fall back to raw preferences
+  const preferenceContext = user.preferenceSummary || 
+    (typeof user.preferences === 'object' && user.preferences !== null 
+      ? JSON.stringify(user.preferences) 
+      : 'No preferences specified');
+
   return `
   You are a helpful assistant that helps users find the best transport options for their trip.
 
@@ -142,7 +166,7 @@ export async function getTransportPrompt(plan: Plan) {
   ${plan.description}
 
   The user's preferences are...
-  ${user.preferences}
+  ${preferenceContext}
 
   The user would like to travel from ${plan.startDate} to ${plan.endDate}.
 

@@ -4,7 +4,8 @@
  */
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { ChevronLeft } from "lucide-react"
 import { IntroScreen } from "./screens/intro-screen"
 import { TravelStyleScreen } from "./screens/travel-style-screen"
@@ -12,10 +13,7 @@ import { BudgetScreen } from "./screens/budget-screen"
 import { TripLengthScreen } from "./screens/trip-length-screen"
 import { CompanionScreen } from "./screens/companion-screen"
 import { DepartureScreen } from "./screens/departure-screen"
-import { SuggestionsFeed } from "../feed/suggestions-feed"
-import { TripDetail, type SavedTripData } from "../feed/trip-detail"
-import { SavedTripReview } from "../feed/saved-trip-review"
-import type { Trip } from "../feed/trip-card"
+import { updateUserPreferences, generatePreferenceSummary, savePreferenceSummary } from "@/app/actions"
 
 export interface OnboardingData {
   travelStyles: string[]
@@ -25,15 +23,18 @@ export interface OnboardingData {
   departureLocation: string
 }
 
+interface OnboardingFlowProps {
+  userId: string
+}
+
 const TOTAL_STEPS = 6
 
-export function OnboardingFlow() {
+export function OnboardingFlow({ userId }: OnboardingFlowProps) {
+  const router = useRouter()
   const [step, setStep] = useState(0)
-  const [isOnboardingComplete, setIsOnboardingComplete] = useState(false)
-  const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null)
-  const [savedTrips, setSavedTrips] = useState<SavedTripData[]>([])
-  const [viewingSavedTrip, setViewingSavedTrip] = useState<SavedTripData | null>(null)
-  const [editingTrip, setEditingTrip] = useState<Trip | null>(null)
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false)
+  const [summaryTaskId, setSummaryTaskId] = useState<string | undefined>()
+  const [isPolling, setIsPolling] = useState(false)
   const [data, setData] = useState<OnboardingData>({
     travelStyles: [],
     budget: "",
@@ -41,6 +42,33 @@ export function OnboardingFlow() {
     companion: "",
     departureLocation: "",
   })
+
+  // Poll for summary completion
+  useEffect(() => {
+    if (!isPolling || !summaryTaskId) return
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch(`/check-status?responseId=${summaryTaskId}`)
+        const statusData = await response.json()
+
+        if (statusData.status === 'completed') {
+          setIsPolling(false)
+          // Save summary to database
+          if (statusData.result) {
+            await savePreferenceSummary(userId, statusData.result)
+          }
+        } else if (statusData.status === 'failed') {
+          setIsPolling(false)
+          console.error('Summary generation failed')
+        }
+      } catch (error) {
+        console.error('Polling error:', error)
+      }
+    }, 3000)
+
+    return () => clearInterval(pollInterval)
+  }, [isPolling, summaryTaskId, userId])
 
   const handleNext = () => {
     if (step < TOTAL_STEPS - 1) {
@@ -58,97 +86,38 @@ export function OnboardingFlow() {
     handleNext()
   }
 
-  const handleComplete = () => {
-    setIsOnboardingComplete(true)
+  const handleComplete = async () => {
+    setIsGeneratingSummary(true)
+    
+    try {
+      // Save raw preferences
+      const saveResult = await updateUserPreferences(userId, data)
+      if (!saveResult.success) {
+        console.error('Failed to save preferences:', saveResult.error)
+        setIsGeneratingSummary(false)
+        return
+      }
+
+      // Generate preference summary in background
+      const summaryResult = await generatePreferenceSummary(userId, data)
+      if (summaryResult.success && summaryResult.taskId) {
+        setSummaryTaskId(summaryResult.taskId)
+        setIsPolling(true)
+      } else {
+        console.error('Failed to generate summary:', summaryResult.error)
+        // Continue anyway - summary is optional
+      }
+
+      // Redirect to explore page
+      router.push('/dashboard/explore')
+    } catch (error) {
+      console.error('Error completing onboarding:', error)
+      setIsGeneratingSummary(false)
+    }
   }
 
   const updateData = (updates: Partial<OnboardingData>) => {
     setData((prev) => ({ ...prev, ...updates }))
-  }
-
-  const handleTripClick = (trip: Trip) => {
-    setSelectedTrip(trip)
-    setEditingTrip(null)
-  }
-
-  const handleBackToFeed = () => {
-    setSelectedTrip(null)
-    setEditingTrip(null)
-    setViewingSavedTrip(null)
-  }
-
-  const handleSaveTrip = (tripData: SavedTripData) => {
-    setSavedTrips(prev => {
-      const existingIndex = prev.findIndex(t => t.trip.id === tripData.trip.id)
-      if (existingIndex >= 0) {
-        const updated = [...prev]
-        updated[existingIndex] = tripData
-        return updated
-      }
-      return [...prev, tripData]
-    })
-  }
-
-  const handleSavedTripClick = (savedTrip: SavedTripData) => {
-    setViewingSavedTrip(savedTrip)
-  }
-
-  const handleReviewTrip = () => {
-    if (selectedTrip) {
-      const savedTrip = savedTrips.find(t => t.trip.id === selectedTrip.id)
-      if (savedTrip) {
-        setViewingSavedTrip(savedTrip)
-        setSelectedTrip(null)
-      }
-    }
-  }
-
-  const handleEditTrip = () => {
-    if (viewingSavedTrip) {
-      setEditingTrip(viewingSavedTrip.trip)
-      setSelectedTrip(viewingSavedTrip.trip)
-      setViewingSavedTrip(null)
-    }
-  }
-
-  const getExistingSavedTrip = (tripId: string) => {
-    return savedTrips.find(t => t.trip.id === tripId) || null
-  }
-
-  // Show saved trip review
-  if (viewingSavedTrip) {
-    return (
-      <SavedTripReview
-        savedTrip={viewingSavedTrip}
-        onBack={handleBackToFeed}
-        onEdit={handleEditTrip}
-      />
-    )
-  }
-
-  // Show trip detail if selected
-  if (selectedTrip) {
-    return (
-      <TripDetail
-        trip={selectedTrip}
-        onBack={handleBackToFeed}
-        onSaveTrip={handleSaveTrip}
-        onReviewTrip={handleReviewTrip}
-        existingSavedTrip={getExistingSavedTrip(selectedTrip.id)}
-      />
-    )
-  }
-
-  // Show suggestions feed after onboarding
-  if (isOnboardingComplete) {
-    return (
-      <SuggestionsFeed
-        onboardingData={data}
-        onTripClick={handleTripClick}
-        savedTrips={savedTrips}
-        onSavedTripClick={handleSavedTripClick}
-      />
-    )
   }
 
   return (
@@ -158,6 +127,7 @@ export function OnboardingFlow() {
           <button
             onClick={handleBack}
             className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
+            disabled={isGeneratingSummary}
           >
             <ChevronLeft className="w-4 h-4" />
             <span>Back</span>
@@ -207,6 +177,7 @@ export function OnboardingFlow() {
             value={data.departureLocation}
             onChange={(location) => updateData({ departureLocation: location })}
             onComplete={handleComplete}
+            isLoading={isGeneratingSummary}
           />
         )}
       </div>
