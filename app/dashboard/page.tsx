@@ -3,7 +3,6 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/prisma/prisma";
 import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
-import { DashboardContent } from "@/components/dashboard/dashboard-content";
 import { Dashboard } from "@/components/dashboard/dashboard";
 
 export default async function DashboardPage() {

@@ -40,28 +40,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
 	return (
 		<div className="min-h-screen bg-background flex flex-col">
-			{/* Header */}
-			<header className="border-b">
-				<div className="container mx-auto px-4 py-4 flex items-center justify-between">
-					<div>
-						<h1 className="text-2xl font-semibold">TripMatch</h1>
-						{userName && (
-							<p className="text-sm text-muted-foreground">
-								Welcome back, {userName}
-							</p>
-						)}
-					</div>
-					<Button variant="ghost" size="sm" onClick={handleSignOut}>
-						<LogOut className="w-4 h-4 mr-2" />
-						Sign Out
-					</Button>
-				</div>
-			</header>
-
 			{/* Main Content */}
-			<main className="flex-1">
-				{children}
-			</main>
+			<main className="flex-1">{children}</main>
 		</div>
 	);
 }
