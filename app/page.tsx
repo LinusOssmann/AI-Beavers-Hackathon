@@ -27,11 +27,11 @@ export default function LandingPage() {
 						<h2 className="text-4xl md:text-6xl font-bold tracking-tight">
 							Let's plan a trip that actually fits you
 						</h2>
+						<InstallPrompt />
 						<p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
 							Answer a few quick questions and we'll suggest trips
 							based on your style, budget, and mood.
 						</p>
-						<InstallPrompt />
 					</div>
 
 					<div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
