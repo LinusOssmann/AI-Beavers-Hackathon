@@ -15,6 +15,7 @@ export interface ActivityCandidate {
   activityCoordinates: Coordinates;
   reason: string;
   priceEstimate: number;
+  imageUrl: string;
 }
 
 export interface AccommodationCandidate {
@@ -26,6 +27,7 @@ export interface AccommodationCandidate {
   accommodationCoordinates: Coordinates;
   reason: string;
   priceEstimatePerNight: number;
+  imageUrl: string;
 }
 
 export interface Destination {
@@ -38,6 +40,7 @@ export interface Destination {
   longitude?: number;
   description?: string;
   reason: string;
+  imageUrl: string;
 }
 
 function nextId(): string {
@@ -56,13 +59,15 @@ export const travelStore = {
     activityName: string,
     _activityCoordinates: Coordinates,
     reason: string,
-    priceEstimate: number
+    priceEstimate: number,
+    imageUrl: string
   ): Promise<string> {
     return activityService.createActivity(
       locationId,
       activityName,
       reason,
-      priceEstimate
+      priceEstimate,
+      imageUrl
     );
   },
 
@@ -78,14 +83,16 @@ export const travelStore = {
     accommodationType: string,
     _accommodationCoordinates: Coordinates,
     reason: string,
-    priceEstimatePerNight: number
+    priceEstimatePerNight: number,
+    imageUrl: string
   ): Promise<string> {
     return accommodationService.createAccommodation(
       locationId,
       accommodationName,
       accommodationType,
       reason,
-      priceEstimatePerNight
+      priceEstimatePerNight,
+      imageUrl
     );
   },
 
@@ -96,7 +103,8 @@ export const travelStore = {
     city?: string,
     coordinates?: Coordinates,
     description?: string,
-    reason: string
+    reason: string,
+    imageUrl: string
   ): Promise<string> {
     return locationService.createLocation({
       planId,
@@ -106,6 +114,7 @@ export const travelStore = {
       coordinates: coordinates ?? null,
       description: description ?? null,
       reason: reason,
+      imageUrl: imageUrl,
     });
   },
 };

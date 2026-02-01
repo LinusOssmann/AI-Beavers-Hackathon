@@ -40,7 +40,8 @@ export async function createActivity(
   locationId: string,
   activityName: string,
   reason: string,
-  priceEstimate: number
+  priceEstimate: number,
+  imageUrl: string
 ): Promise<string> {
   const location = await prisma.location.findUnique({
     where: { id: locationId },
@@ -54,6 +55,7 @@ export async function createActivity(
       location: { connect: { id: locationId } },
       name: activityName,
       reason,
+      imageUrl: imageUrl,
       price: priceEstimate,
       isSelected: false,
     },

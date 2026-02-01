@@ -69,15 +69,17 @@ const handler = createMcpHandler(
           activityCoordinates: coordinatesSchema,
           reason: z.string(),
           priceEstimate: z.number(),
+          imageUrl: z.string().url(),
         },
       },
-      async ({ locationId, activityName, reason, priceEstimate }) => {
+      async ({ locationId, activityName, reason, priceEstimate, imageUrl }) => {
         try {
           const id = await activityService.createActivity(
             locationId,
             activityName,
             reason,
-            priceEstimate
+            priceEstimate,
+            imageUrl
           );
           return {
             content: [{ type: "text" as const, text: JSON.stringify({ id }) }],
@@ -131,6 +133,7 @@ const handler = createMcpHandler(
           accommodationCoordinates: coordinatesSchema,
           reason: z.string(),
           priceEstimatePerNight: z.number(),
+          imageUrl: z.string().url(),
         },
       },
       async ({
@@ -139,6 +142,7 @@ const handler = createMcpHandler(
         accommodationType,
         reason,
         priceEstimatePerNight,
+        imageUrl,
       }) => {
         try {
           const id = await accommodationService.createAccommodation(
@@ -146,7 +150,8 @@ const handler = createMcpHandler(
             accommodationName,
             accommodationType,
             reason,
-            priceEstimatePerNight
+            priceEstimatePerNight,
+            imageUrl
           );
           return {
             content: [{ type: "text" as const, text: JSON.stringify({ id }) }],
@@ -172,9 +177,10 @@ const handler = createMcpHandler(
           coordinates: coordinatesSchema.optional(),
           description: z.string().optional(),
           reason: z.string().min(1),
+          imageUrl: z.string().url(),
         },
       },
-      async ({ planId, name, country, city, coordinates, description, reason }) => {
+      async ({ planId, name, country, city, coordinates, description, reason, imageUrl }) => {
         try {
           const id = await locationService.createLocation({
             planId,
@@ -189,6 +195,7 @@ const handler = createMcpHandler(
               : null,
             description: description ?? null,
             reason: reason,
+            imageUrl: imageUrl,
           });
           return {
             content: [{ type: "text" as const, text: JSON.stringify({ id }) }],

@@ -43,7 +43,8 @@ export async function createAccommodation(
   accommodationName: string,
   accommodationType: string,
   reason: string,
-  priceEstimatePerNight: number
+  priceEstimatePerNight: number,
+  imageUrl: string
 ): Promise<string> {
   const location = await prisma.location.findUnique({
     where: { id: locationId },
@@ -58,6 +59,7 @@ export async function createAccommodation(
       name: accommodationName,
       type: accommodationType,
       reason: reason,
+      imageUrl: imageUrl,
       price: priceEstimatePerNight,
       isSelected: false,
     },

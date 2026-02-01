@@ -17,6 +17,7 @@ export async function createLocation(params: {
   coordinates?: { latitude: number; longitude: number } | null;
   description?: string | null;
   reason: string;
+  imageUrl: string;
 }): Promise<string> {
   const {
     planId,
@@ -26,6 +27,7 @@ export async function createLocation(params: {
     coordinates,
     description,
     reason,
+    imageUrl,
   } = params;
   const plan = await prisma.plan.findUnique({
     where: { id: planId },
@@ -44,6 +46,7 @@ export async function createLocation(params: {
       longitude: coordinates?.longitude ?? null,
       description: description ?? null,
       reason: reason,
+      imageUrl: imageUrl,
       isSelected: false,
     },
   });
