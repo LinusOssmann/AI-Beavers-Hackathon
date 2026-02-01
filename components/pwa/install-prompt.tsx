@@ -28,7 +28,7 @@ function App() {
         }}
         install-description="To get the best experience, install TripMatch on your device. You can get notifications, have a native-like experience, and more."
         name="TripMatch"
-        description="TripMatch is your personal travel agent. Stop planning trips and let them be planned for you."
+        description="TripMatch is your personal travel agent."
       ></pwa-install>
     </>
   );
