@@ -1,8 +1,8 @@
 "use client";
 
 import { SignUpForm } from "@/components/auth/sign-up-form";
-import { Compass } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function SignUpPage() {
 	return (
@@ -10,7 +10,13 @@ export default function SignUpPage() {
 			<header className="border-b">
 				<div className="container mx-auto px-4 py-4">
 					<Link href="/" className="flex items-center gap-2">
-						<Compass className="w-6 h-6" />
+						<Image
+							src="/android/android-launchericon-48-48.png"
+							alt=""
+							width={24}
+							height={24}
+							className="size-6 object-contain"
+						/>
 						<h1 className="text-xl font-semibold">TripMatch</h1>
 					</Link>
 				</div>

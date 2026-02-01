@@ -1,7 +1,9 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { Compass, Briefcase, User } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { Briefcase, Compass, User } from "lucide-react";
 
 interface DashboardLayoutProps {
 	children: React.ReactNode;
@@ -35,9 +37,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 				<div className="max-w-[1400px] mx-auto px-8 md:px-16 lg:px-24 xl:px-32 py-1">
 					<div className="flex items-center justify-between h-14">
 						{/* Logo */}
-						<span className="text-lg font-semibold text-foreground">
+						<Link
+							href="/dashboard/explore"
+							className="flex items-center gap-2 text-lg font-semibold text-foreground"
+						>
+							<Image
+								src="/android/android-launchericon-48-48.png"
+								alt=""
+								width={24}
+								height={24}
+								className="size-6 object-contain"
+							/>
 							Easy Travels
-						</span>
+						</Link>
 
 						{/* Navigation Tabs */}
 						<nav className="flex items-center gap-2">

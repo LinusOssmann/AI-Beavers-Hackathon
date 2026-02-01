@@ -2,6 +2,7 @@ import InstallPrompt from "@/components/pwa/install-prompt";
 import { PushNotificationButtons } from "@/components/pwa/push-notification-buttons";
 import { Button } from "@/components/ui/button";
 import { Compass, Map, Sparkles } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function LandingPage() {
@@ -11,7 +12,13 @@ export default function LandingPage() {
 			<header className="border-b">
 				<div className="container mx-auto px-4 py-4 flex items-center justify-between">
 					<div className="flex items-center gap-2">
-						<Compass className="w-6 h-6" />
+						<Image
+							src="/android/android-launchericon-48-48.png"
+							alt=""
+							width={24}
+							height={24}
+							className="size-6 object-contain"
+						/>
 						<h1 className="text-xl font-semibold">TripMatch</h1>
 					</div>
 					<Button variant="ghost" asChild>
