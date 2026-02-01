@@ -1,5 +1,8 @@
 import getBody from "@/app/api/lib/getBody";
-import { createManusAgentTask } from "@/lib/manus-responses";
+import {
+  createManusAgentTask,
+  notifyTaskProgress,
+} from "@/lib/manus-responses";
 import { getPreferenceRefinerPrompt as getPreferenceTaskPrompt } from "@/lib/prompts.manus.service";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -13,6 +16,9 @@ async function createPreferenceTask(
 ): Promise<NextResponse> {
   const prompt = await getPreferenceTaskPrompt(body.preferences);
   const response = await createManusAgentTask(prompt);
+
+  // Notify user that preference refinement has started (non-blocking)
+  notifyTaskProgress("started", "preference analysis");
 
   return NextResponse.json({
     responseId: response.id,

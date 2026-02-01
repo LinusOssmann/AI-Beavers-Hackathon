@@ -17,6 +17,9 @@ export interface ManusResponse {
 
 const BASE = "https://api.manus.im/v1/responses";
 
+// Track which task IDs have been notified for completion/failure to avoid duplicates
+const notifiedTasks = new Set<string>();
+
 function apiKey(): string {
   const key = process.env.MANUS_API_KEY ?? process.env.AI_OPENAI_COMPATIBLE_API_KEY;
   if (!key) throw new Error("MANUS_API_KEY or AI_OPENAI_COMPATIBLE_API_KEY required");
@@ -64,4 +67,48 @@ export async function createManusAgentTask(prompt: string): Promise<ManusRespons
 /** Retrieves the current status and output for a task by id. */
 export async function retrieveManusResponse(taskId: string): Promise<ManusResponse> {
   return (await manusFetch(`/${taskId}`)) as ManusResponse;
+}
+
+/**
+ * Sends a push notification about agent task progress.
+ * Wrapped in try-catch to prevent notification errors from breaking functionality.
+ */
+export async function notifyTaskProgress(
+  status: "started" | "completed" | "failed",
+  taskType: string,
+  taskId?: string
+): Promise<void> {
+  try {
+    // For completed/failed, check if we've already notified to avoid duplicates
+    if (taskId && (status === "completed" || status === "failed")) {
+      const notificationKey = `${taskId}:${status}`;
+      if (notifiedTasks.has(notificationKey)) {
+        return; // Already notified
+      }
+      notifiedTasks.add(notificationKey);
+    }
+
+    // Dynamically import to avoid circular dependencies
+    const { sendNotification } = await import("@/app/actions");
+    
+    let message: string;
+    switch (status) {
+      case "started":
+        message = `Your ${taskType} is being processed...`;
+        break;
+      case "completed":
+        message = `Your ${taskType} is ready!`;
+        break;
+      case "failed":
+        message = `There was an issue with your ${taskType}.`;
+        break;
+      default:
+        message = `Update on your ${taskType}.`;
+    }
+    
+    await sendNotification(message);
+  } catch (error) {
+    // Silently fail - notification errors should not break functionality
+    console.error(`Failed to send ${status} notification for ${taskType}:`, error);
+  }
 }

@@ -1,5 +1,8 @@
 import getBody from "@/app/api/lib/getBody";
-import { createManusAgentTask } from "@/lib/manus-responses";
+import {
+  createManusAgentTask,
+  notifyTaskProgress,
+} from "@/lib/manus-responses";
 import { getLocationPrompt } from "@/lib/prompts.manus.service";
 import { prisma } from "@/prisma/prisma";
 import { NextResponse } from "next/server";
@@ -25,6 +28,9 @@ async function createLocationSuggestions(
 
   const prompt = await getLocationPrompt(plan);
   const response = await createManusAgentTask(prompt);
+
+  // Notify user that task has started (non-blocking)
+  notifyTaskProgress("started", "location suggestions");
 
   return NextResponse.json({
     responseId: response.id,

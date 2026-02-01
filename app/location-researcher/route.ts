@@ -1,5 +1,8 @@
 import getBody from "@/app/api/lib/getBody";
-import { createManusAgentTask } from "@/lib/manus-responses";
+import {
+  createManusAgentTask,
+  notifyTaskProgress,
+} from "@/lib/manus-responses";
 import {
   getAccommodationPrompt,
   getActivityPrompt,
@@ -50,6 +53,9 @@ async function createLocationResearch(
   const activityPrompt = await getActivityPrompt(plan);
   const prompt = [accommodationPrompt, "", activityPrompt].join("\n");
   const response = await createManusAgentTask(prompt);
+
+  // Notify user that location research has started (non-blocking)
+  notifyTaskProgress("started", "destination research");
 
   return NextResponse.json({
     responseId: response.id,

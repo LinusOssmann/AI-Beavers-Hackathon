@@ -57,7 +57,8 @@ export async function unsubscribeUser() {
 /** Sends a push notification with the given message to the stored subscription. */
 export async function sendNotification(message: string) {
   if (!subscription) {
-    throw new Error("No subscription available");
+    // Silently return if no subscription - user hasn't enabled notifications
+    return { success: false, error: "No subscription available" };
   }
 
   try {

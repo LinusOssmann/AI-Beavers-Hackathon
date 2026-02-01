@@ -1,5 +1,8 @@
 import getBody from "@/app/api/lib/getBody";
-import { retrieveManusResponse } from "@/lib/manus-responses";
+import {
+  retrieveManusResponse,
+  notifyTaskProgress,
+} from "@/lib/manus-responses";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -22,6 +25,13 @@ function getResponseIdentifierFromBody(
 
 async function handleCheckStatus(responseId: string) {
   const data = await retrieveManusResponse(responseId);
+
+  // Send notification on completion or failure (non-blocking)
+  if (data.status === "completed") {
+    notifyTaskProgress("completed", "task", responseId);
+  } else if (data.status === "failed") {
+    notifyTaskProgress("failed", "task", responseId);
+  }
 
   return NextResponse.json(data);
 }
