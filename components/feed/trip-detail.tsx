@@ -128,11 +128,7 @@ export function TripDetail({
 
 	// Photo gallery
 	const galleryImages = [
-		trip.heroImage,
-		"https://images.unsplash.com/photo-1539635278303-d4002c07eae3?w=800&q=80",
-		"https://images.unsplash.com/photo-1527631746610-bca00a040d60?w=800&q=80",
-		"https://images.unsplash.com/photo-1502791451862-7bd8c1df43a7?w=800&q=80",
-		"https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80",
+		trip.heroImage || "/placeholder.svg",
 	];
 
 	// Sample transportation options
@@ -168,7 +164,7 @@ export function TripDetail({
 		{
 			id: "a1",
 			name: "Cozy Garden Hostel",
-			image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80",
+			image: "/placeholder.svg",
 			category: "budget",
 			location: "City Center",
 			rating: 4.2,
@@ -180,7 +176,7 @@ export function TripDetail({
 		{
 			id: "a2",
 			name: "Harbor View Hotel",
-			image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80",
+			image: "/placeholder.svg",
 			category: "comfort",
 			location: "Waterfront District",
 			rating: 4.6,
@@ -192,7 +188,7 @@ export function TripDetail({
 		{
 			id: "a3",
 			name: "The Grand Palace",
-			image: "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&q=80",
+			image: "/placeholder.svg",
 			category: "premium",
 			location: "Historic Quarter",
 			rating: 4.9,
@@ -211,7 +207,7 @@ export function TripDetail({
 			description:
 				"Taste authentic local flavors and discover hidden culinary gems with a food expert",
 			duration: "3-4 hours",
-			image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&q=80",
+			image: "/placeholder.svg",
 			tag: "Food",
 		},
 		{
@@ -220,7 +216,7 @@ export function TripDetail({
 			description:
 				"Explore cobblestone streets and historic architecture with a local storyteller",
 			duration: "2-3 hours",
-			image: "https://images.unsplash.com/photo-1524850011238-b723cf961d3e?w=400&q=80",
+			image: "/placeholder.svg",
 			tag: "Culture",
 		},
 		{
@@ -229,7 +225,7 @@ export function TripDetail({
 			description:
 				"Visit stunning beaches and hidden coves along the dramatic coastline",
 			duration: "Full day",
-			image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80",
+			image: "/placeholder.svg",
 			tag: "Adventure",
 		},
 		{
@@ -238,7 +234,7 @@ export function TripDetail({
 			description:
 				"Learn to prepare traditional dishes in a hands-on workshop",
 			duration: "3 hours",
-			image: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=400&q=80",
+			image: "/placeholder.svg",
 			tag: "Food",
 		},
 		{
@@ -247,7 +243,7 @@ export function TripDetail({
 			description:
 				"Discover world-class collections and contemporary exhibitions",
 			duration: "3-4 hours",
-			image: "https://images.unsplash.com/photo-1564399579883-451a5d44ec08?w=400&q=80",
+			image: "/placeholder.svg",
 			tag: "Culture",
 		},
 		{
@@ -256,7 +252,7 @@ export function TripDetail({
 			description:
 				"Rejuvenate with traditional treatments and thermal baths",
 			duration: "4-5 hours",
-			image: "https://images.unsplash.com/photo-1540551763-92fee7e34c0b?w=400&q=80",
+			image: "/placeholder.svg",
 			tag: "Relaxation",
 		},
 		{
@@ -265,7 +261,7 @@ export function TripDetail({
 			description:
 				"Sail along the coast with drinks and stunning sunset views",
 			duration: "2-3 hours",
-			image: "https://images.unsplash.com/photo-1544551763-92fee7e34c0b?w=400&q=80",
+			image: "/placeholder.svg",
 			tag: "Relaxation",
 		},
 		{
@@ -273,7 +269,7 @@ export function TripDetail({
 			title: "Hiking & Nature Walk",
 			description: "Trek through scenic trails with breathtaking views",
 			duration: "4-5 hours",
-			image: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=400&q=80",
+			image: "/placeholder.svg",
 			tag: "Adventure",
 		},
 	];

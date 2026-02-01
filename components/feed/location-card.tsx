@@ -17,10 +17,7 @@ export function LocationCard({
 	isSelected = false,
 	isResearching = false,
 }: LocationCardProps) {
-	// Generate image from location name (use Unsplash)
-	const imageUrl = `https://source.unsplash.com/800x600/?${encodeURIComponent(
-		location.name,
-	)},travel`;
+	const imageUrl = location.imageUrl || "/placeholder.svg";
 
 	return (
 		<button
