@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
         description: description ?? null,
         startDate: startDate != null ? new Date(startDate) : null,
         endDate: endDate != null ? new Date(endDate) : null,
+        generationStatus: "idle", // Initialize with idle status
       },
     });
     return NextResponse.json(plan);

@@ -113,6 +113,12 @@ model Plan {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   locations     Location[]
+  
+  // Generation status tracking to prevent duplicate requests
+  generationStatus String       @default("idle") // "idle" | "generating_locations" | "generating_research" | "completed"
+  locationTaskId   String?      // Manus task ID for location generation
+  researchTaskId   String?      // Manus task ID for research
+  lastGeneratedAt  DateTime?    // Timestamp of last generation
 
   @@index([userId])
   @@map("plan")

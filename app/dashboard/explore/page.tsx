@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { SuggestionsFeed } from "@/components/feed/suggestions-feed";
+import { PlanStatusBanner } from "@/components/feed/plan-status-banner";
 import { prisma } from "@/prisma/prisma";
 
 export default async function ExplorePage() {
@@ -38,13 +39,27 @@ export default async function ExplorePage() {
 	});
 
 	return (
-		<SuggestionsFeed
-			userId={session.user.id}
-			userPreferences={user.preferences as any}
-			preferenceSummary={user.preferenceSummary}
-			needsSummaryRegeneration={needsSummary}
-			existingPlanId={latestPlan?.id}
-			initialLocations={latestPlan?.locations || []}
-		/>
+		<>
+			{latestPlan && (
+				<PlanStatusBanner
+					plan={{
+						id: latestPlan.id,
+						title: latestPlan.title,
+						createdAt: latestPlan.createdAt,
+						generationStatus: latestPlan.generationStatus,
+						lastGeneratedAt: latestPlan.lastGeneratedAt,
+					}}
+				/>
+			)}
+			<SuggestionsFeed
+				userId={session.user.id}
+				userPreferences={user.preferences as any}
+				preferenceSummary={user.preferenceSummary}
+				needsSummaryRegeneration={needsSummary}
+				existingPlanId={latestPlan?.id}
+				initialLocations={latestPlan?.locations || []}
+				existingGenerationStatus={latestPlan?.generationStatus || "idle"}
+			/>
+		</>
 	);
 }
