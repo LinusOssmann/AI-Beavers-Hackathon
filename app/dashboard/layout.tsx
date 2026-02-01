@@ -28,7 +28,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 		},
 	];
 
-	const activeTab = pathname.includes("/itineraries") ? "itineraries" : "explore";
+	const activeTab = pathname.includes("/itineraries")
+		? "itineraries"
+		: "explore";
 
 	return (
 		<div className="min-h-screen bg-background flex flex-col">
@@ -48,7 +50,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 								height={24}
 								className="size-6 object-contain"
 							/>
-							Easy Travels
+							TripMatch
 						</Link>
 
 						{/* Navigation Tabs */}
@@ -69,7 +71,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 											}`}
 									>
 										<Icon className="w-4 h-4" />
-										<span className="hidden sm:inline">{tab.label}</span>
+										<span className="hidden sm:inline">
+											{tab.label}
+										</span>
 									</button>
 								);
 							})}
