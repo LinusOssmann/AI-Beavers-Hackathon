@@ -27,7 +27,12 @@ export default function LandingPage() {
 						<h2 className="text-4xl md:text-6xl font-bold tracking-tight">
 							Let's plan a trip that actually fits you
 						</h2>
-						<InstallPrompt />
+						<div className="flex justify-center gap-8">
+							<InstallPrompt />
+							<PushNotificationButtons />
+						</div>
+
+
 						<p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
 							Answer a few quick questions and we'll suggest trips
 							based on your style, budget, and mood.
@@ -79,7 +84,6 @@ export default function LandingPage() {
 						</p>
 					</div>
 
-					<PushNotificationButtons />
 
 					<div className="text-center space-y-2">
 						<div className="flex justify-center">

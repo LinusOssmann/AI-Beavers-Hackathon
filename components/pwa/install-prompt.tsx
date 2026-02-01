@@ -14,7 +14,7 @@ function App() {
     }
   };
   return (
-    <>
+    <div className="flex flex-col gap-2 w-full max-w-md mx-auto">
       <Button
         onClick={createDialog}
         variant="outline"
@@ -30,7 +30,7 @@ function App() {
         name="TripMatch"
         description="TripMatch is your personal travel agent."
       ></pwa-install>
-    </>
+    </div>
   );
 }
 
