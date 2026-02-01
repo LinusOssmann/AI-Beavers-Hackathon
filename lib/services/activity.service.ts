@@ -40,7 +40,8 @@ export async function createActivity(
   locationId: string,
   activityName: string,
   reason: string,
-  priceEstimate: number
+  priceEstimate: number,
+  imageUrl: string
 ): Promise<string> {
   const location = await prisma.location.findUnique({
     where: { id: locationId },
@@ -51,10 +52,10 @@ export async function createActivity(
   }
   const activity = await prisma.activity.create({
     data: {
-      plan: { connect: { id: location.planId } },
       location: { connect: { id: locationId } },
       name: activityName,
       reason,
+      imageUrl: imageUrl,
       price: priceEstimate,
       isSelected: false,
     },
@@ -74,12 +75,12 @@ export async function selectActivities(
     if (!plan) return false;
   }
   const count = await prisma.activity.count({
-    where: { id: { in: activityIds }, planId },
+    where: { id: { in: activityIds }, location: { planId } },
   });
   if (count !== activityIds.length) return false;
 
   await prisma.activity.updateMany({
-    where: { id: { in: activityIds }, planId },
+    where: { id: { in: activityIds }, location: { planId } },
     data: { isSelected: true },
   });
   return true;

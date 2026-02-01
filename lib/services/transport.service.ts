@@ -12,13 +12,13 @@ export async function selectTransport(
     if (!plan) return false;
   }
   const transport = await prisma.transport.findFirst({
-    where: { id: transportId, planId },
+    where: { id: transportId, location: { planId } },
   });
   if (!transport) return false;
 
   await prisma.$transaction([
     prisma.transport.updateMany({
-      where: { planId },
+      where: { location: { planId } },
       data: { isSelected: false },
     }),
     prisma.transport.update({

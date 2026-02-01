@@ -69,15 +69,17 @@ const handler = createMcpHandler(
           activityCoordinates: coordinatesSchema,
           reason: z.string(),
           priceEstimate: z.number(),
+          imageUrl: z.string().url(),
         },
       },
-      async ({ locationId, activityName, reason, priceEstimate }) => {
+      async ({ locationId, activityName, reason, priceEstimate, imageUrl }) => {
         try {
           const id = await activityService.createActivity(
             locationId,
             activityName,
             reason,
-            priceEstimate
+            priceEstimate,
+            imageUrl
           );
           return {
             content: [{ type: "text" as const, text: JSON.stringify({ id }) }],
@@ -131,6 +133,7 @@ const handler = createMcpHandler(
           accommodationCoordinates: coordinatesSchema,
           reason: z.string(),
           priceEstimatePerNight: z.number(),
+          imageUrl: z.string().url(),
         },
       },
       async ({
@@ -139,6 +142,7 @@ const handler = createMcpHandler(
         accommodationType,
         reason,
         priceEstimatePerNight,
+        imageUrl,
       }) => {
         try {
           const id = await accommodationService.createAccommodation(
@@ -146,42 +150,11 @@ const handler = createMcpHandler(
             accommodationName,
             accommodationType,
             reason,
-            priceEstimatePerNight
+            priceEstimatePerNight,
+            imageUrl
           );
           return {
             content: [{ type: "text" as const, text: JSON.stringify({ id }) }],
-          };
-        } catch (err) {
-          const message = err instanceof Error ? err.message : String(err);
-          return toolError(message);
-        }
-      }
-    );
-
-    server.registerTool(
-      "addClarifyingQuestion",
-      {
-        title: "Add Clarifying Question",
-        description:
-          "Adds a clarifying question to a location. The question is saved for later and not answered immediately.",
-        inputSchema: {
-          locationId: z.string().min(1),
-          question: z.string().min(1),
-        },
-      },
-      async ({ locationId, question }) => {
-        try {
-          const id = travelStore.addClarifyingQuestion(locationId, question);
-          return {
-            content: [
-              {
-                type: "text" as const,
-                text: JSON.stringify({
-                  id,
-                  message: "Clarifying question saved for later.",
-                }),
-              },
-            ],
           };
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
@@ -203,23 +176,27 @@ const handler = createMcpHandler(
           city: z.string().optional(),
           coordinates: coordinatesSchema.optional(),
           description: z.string().optional(),
+          reason: z.string().min(1),
+          imageUrl: z.string().url(),
         },
       },
-      async ({ planId, name, country, city, coordinates, description }) => {
+      async ({ planId, name, country, city, coordinates, description, reason, imageUrl }) => {
         try {
-          const id = await locationService.createLocation(
+          const id = await locationService.createLocation({
             planId,
             name,
             country,
-            city ?? null,
-            coordinates
+            city: city ?? null,
+            coordinates: coordinates
               ? {
                   latitude: coordinates.latitude,
                   longitude: coordinates.longitude,
                 }
               : null,
-            description ?? null
-          );
+            description: description ?? null,
+            reason: reason,
+            imageUrl: imageUrl,
+          });
           return {
             content: [{ type: "text" as const, text: JSON.stringify({ id }) }],
           };

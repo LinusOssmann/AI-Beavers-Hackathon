@@ -15,6 +15,7 @@ export interface ActivityCandidate {
   activityCoordinates: Coordinates;
   reason: string;
   priceEstimate: number;
+  imageUrl: string;
 }
 
 export interface AccommodationCandidate {
@@ -26,12 +27,7 @@ export interface AccommodationCandidate {
   accommodationCoordinates: Coordinates;
   reason: string;
   priceEstimatePerNight: number;
-}
-
-export interface ClarifyingQuestion {
-  id: string;
-  locationId: string;
-  question: string;
+  imageUrl: string;
 }
 
 export interface Destination {
@@ -43,9 +39,9 @@ export interface Destination {
   latitude?: number;
   longitude?: number;
   description?: string;
+  reason: string;
+  imageUrl: string;
 }
-
-const clarifyingQuestions: ClarifyingQuestion[] = [];
 
 function nextId(): string {
   return crypto.randomUUID();
@@ -63,13 +59,15 @@ export const travelStore = {
     activityName: string,
     _activityCoordinates: Coordinates,
     reason: string,
-    priceEstimate: number
+    priceEstimate: number,
+    imageUrl: string
   ): Promise<string> {
     return activityService.createActivity(
       locationId,
       activityName,
       reason,
-      priceEstimate
+      priceEstimate,
+      imageUrl
     );
   },
 
@@ -85,21 +83,17 @@ export const travelStore = {
     accommodationType: string,
     _accommodationCoordinates: Coordinates,
     reason: string,
-    priceEstimatePerNight: number
+    priceEstimatePerNight: number,
+    imageUrl: string
   ): Promise<string> {
     return accommodationService.createAccommodation(
       locationId,
       accommodationName,
       accommodationType,
       reason,
-      priceEstimatePerNight
+      priceEstimatePerNight,
+      imageUrl
     );
-  },
-
-  addClarifyingQuestion(locationId: string, question: string): string {
-    const id = nextId();
-    clarifyingQuestions.push({ id, locationId, question });
-    return id;
   },
 
   async addDestination(
@@ -108,15 +102,19 @@ export const travelStore = {
     country: string,
     city?: string,
     coordinates?: Coordinates,
-    description?: string
+    description?: string,
+    reason: string,
+    imageUrl: string
   ): Promise<string> {
-    return locationService.createLocation(
+    return locationService.createLocation({
       planId,
       name,
       country,
-      city ?? null,
-      coordinates ?? null,
-      description ?? null
-    );
+      city: city ?? null,
+      coordinates: coordinates ?? null,
+      description: description ?? null,
+      reason: reason,
+      imageUrl: imageUrl,
+    });
   },
 };

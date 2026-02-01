@@ -129,6 +129,7 @@ model Location {
   longitude     Float?
   description   String?
   reason        String?        // Why the model chose this location
+  imageUrl      String
   isSelected    Boolean        @default(false)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
@@ -156,6 +157,7 @@ model Accommodation {
   checkIn     DateTime?
   checkOut    DateTime?
   reason      String?  // Why the model chose this accommodation
+  imageUrl    String
   isSelected  Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -179,6 +181,7 @@ model Activity {
   description String?
   reason      String   // reason why the activity was suggested for the user 
   duration    Int?     // Measure: duration in minutes
+  imageUrl    String
   isSelected  Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

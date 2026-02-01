@@ -9,14 +9,26 @@ export async function getLocationById(
   });
 }
 
-export async function createLocation(
-  planId: string,
-  name: string,
-  country: string,
-  city?: string | null,
-  coordinates?: { latitude: number; longitude: number } | null,
-  description?: string | null
-): Promise<string> {
+export async function createLocation(params: {
+  planId: string;
+  name: string;
+  country: string;
+  city?: string | null;
+  coordinates?: { latitude: number; longitude: number } | null;
+  description?: string | null;
+  reason: string;
+  imageUrl: string;
+}): Promise<string> {
+  const {
+    planId,
+    name,
+    country,
+    city,
+    coordinates,
+    description,
+    reason,
+    imageUrl,
+  } = params;
   const plan = await prisma.plan.findUnique({
     where: { id: planId },
     select: { id: true },
@@ -33,6 +45,8 @@ export async function createLocation(
       latitude: coordinates?.latitude ?? null,
       longitude: coordinates?.longitude ?? null,
       description: description ?? null,
+      reason: reason,
+      imageUrl: imageUrl,
       isSelected: false,
     },
   });
