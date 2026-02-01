@@ -66,7 +66,8 @@ export default function LandingPage() {
 						<img
 							src="https://upload.wikimedia.org/wikipedia/en/f/f7/Manus_logo.svg"
 							alt="Manus"
-							className="h-6 w-auto scale-x-200"
+							className="h-6 w-auto"
+							style={{ width: "96px" }}
 							loading="lazy"
 						/>
 					</div>
