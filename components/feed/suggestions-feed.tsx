@@ -111,7 +111,7 @@ export function SuggestionsFeed({
 
 				// Continue polling
 				attempts++;
-				setTimeout(poll, 3000);
+				setTimeout(poll, 6000);
 			} catch (error) {
 				console.error("Polling error:", error);
 				setIsRegeneratingSummary(false);
@@ -154,7 +154,7 @@ export function SuggestionsFeed({
 		};
 
 		pollPlan();
-		const pollInterval = setInterval(pollPlan, 4000);
+		const pollInterval = setInterval(pollPlan, 8000);
 
 		return () => {
 			isActive = false;
@@ -197,7 +197,7 @@ export function SuggestionsFeed({
 		};
 
 		pollPlan();
-		const pollInterval = setInterval(pollPlan, 4000);
+		const pollInterval = setInterval(pollPlan, 8000);
 
 		return () => {
 			isActive = false;

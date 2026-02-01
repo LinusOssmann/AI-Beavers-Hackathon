@@ -68,7 +68,7 @@ export function OnboardingFlow({ userId }: OnboardingFlowProps) {
       } catch (error) {
         console.error('Polling error:', error)
       }
-    }, 3000)
+    }, 6000)
 
     return () => clearInterval(pollInterval)
   }, [isPolling, summaryTaskId, userId])

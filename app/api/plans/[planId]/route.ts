@@ -19,10 +19,13 @@ export async function GET(
     const plan = await prisma.plan.findUnique({
       where: { id: planId },
       include: {
-        locations: true,
-        accommodations: true,
-        activities: true,
-        transports: true,
+        locations: {
+          include: {
+            accommodations: true,
+            activities: true,
+            transports: true,
+          },
+        },
       },
     });
     if (!plan) {
