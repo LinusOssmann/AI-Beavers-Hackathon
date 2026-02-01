@@ -136,7 +136,7 @@ export function OnboardingFlow({ userId }: OnboardingFlowProps) {
             <span>Back</span>
           </button>
           <div className="flex-1">
-            <ProgressIndicator currentStep={step} totalSteps={TOTAL_STEPS - 1} />
+            <ProgressIndicator currentStep={step - 1} totalSteps={TOTAL_STEPS - 1} />
           </div>
         </div>
       )}
@@ -202,7 +202,7 @@ function ProgressIndicator({ currentStep, totalSteps }: { currentStep: number; t
         <div
           key={i}
           className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
-            i < currentStep ? "bg-primary" : "bg-secondary"
+            i < Math.max(0, currentStep) ? "bg-primary" : "bg-secondary"
           }`}
         />
       ))}
