@@ -1,6 +1,7 @@
+import { InstallPrompt } from "@/components/pwa/install-prompt";
+import { PushNotificationButtons } from "@/components/pwa/push-notification-buttons";
 import { Button } from "@/components/ui/button";
 import { Compass, Map, Sparkles } from "lucide-react";
-import { InstallPrompt } from "@/components/pwa/install-prompt";
 import Link from "next/link";
 
 export default function LandingPage() {
@@ -77,6 +78,8 @@ export default function LandingPage() {
 							activities, and transportation
 						</p>
 					</div>
+
+					<PushNotificationButtons />
 
 					<div className="text-center space-y-2">
 						<div className="flex justify-center">
