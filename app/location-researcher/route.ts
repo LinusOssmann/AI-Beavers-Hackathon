@@ -9,9 +9,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 const bodySchema = z.object({
-  destination: z.unknown(),
-  preferences: z.string().min(1),
-  preferenceSummary: z.string().optional(),
   planId: z.string().min(1),
   locationId: z.string().min(1),
 });

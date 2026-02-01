@@ -55,6 +55,7 @@ export async function createManusAgentTask(prompt: string): Promise<ManusRespons
       input: [{ role: "user", content: [{ type: "input_text", text: prompt }] }],
       task_mode: "agent",
       agent_profile: "manus-1.6",
+      interactive_mode: false,
       connectors: travelConnectors(),
     }),
   })) as ManusResponse;

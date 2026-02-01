@@ -202,8 +202,6 @@ export function SuggestionsFeed({
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
 					planId: plan.id,
-					preferences: JSON.stringify(userPreferences),
-					preferenceSummary: summary || "",
 				}),
 			});
 
@@ -236,8 +234,6 @@ export function SuggestionsFeed({
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
 					planId,
-					preferences: JSON.stringify(userPreferences),
-					preferenceSummary: summary || "",
 				}),
 			});
 
@@ -272,9 +268,6 @@ export function SuggestionsFeed({
 				body: JSON.stringify({
 					planId,
 					locationId: location.id,
-					destination: { name: location.name, country: location.country },
-					preferences: JSON.stringify(userPreferences),
-					preferenceSummary: summary || "",
 				}),
 			});
 

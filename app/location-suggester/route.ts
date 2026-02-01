@@ -6,8 +6,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 const bodySchema = z.object({
-  preferences: z.string().min(1),
-  preferenceSummary: z.string().min(1),
   planId: z.string().min(1),
 });
 
