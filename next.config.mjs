@@ -1,4 +1,11 @@
 const nextConfig = {
+	globalPassThroughEnv: ["DATABASE_URL"],
+	globalEnv: ["DATABASE_URL"],
+	tasks: {
+		build: {
+			env: ["DATABASE_URL"],
+		},
+	},
 	experimental: {
 		turbo: {
 			resolveAlias: {
