@@ -22,7 +22,7 @@ export function LocationCard({
 	return (
 		<button
 			onClick={onClick}
-			className="w-full h-full text-left bg-card overflow-hidden border border-border hover:border-muted-foreground shadow-sm hover:shadow-md transition-all duration-200 group rounded-md flex flex-col"
+			className="w-full h-full text-left bg-card overflow-hidden border border-border hover:border-muted-foreground shadow-sm hover:shadow-md transition-all duration-200 group rounded-md flex flex-col cursor-pointer"
 		>
 			{/* Hero Image */}
 			<div className="relative aspect-[4/3] overflow-hidden bg-muted flex-shrink-0">
@@ -34,7 +34,7 @@ export function LocationCard({
 				/>
 				{!isResearching && (
 					<div className="absolute inset-x-0 bottom-0 px-3 pb-3">
-						<div className="inline-flex items-center gap-2 rounded-full bg-black/65 text-white text-xs font-medium px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+						<div className="inline-flex items-center gap-2 rounded-full bg-black/80 text-white text-sm font-semibold px-4 py-2 shadow-lg opacity-0 group-hover:opacity-100 transition-all group-hover:scale-[1.03]">
 							Research this destination
 						</div>
 					</div>
