@@ -26,8 +26,26 @@ async function createLocationSuggestions(
     );
   }
 
+  // Check if generation is already in progress
+  if (plan.generationStatus === "generating_locations") {
+    return NextResponse.json(
+      { error: "Location generation already in progress" },
+      { status: 409 }
+    );
+  }
+
   const prompt = await getLocationPrompt(plan);
   const response = await createManusAgentTask(prompt);
+
+  // Update plan with generation status and task ID
+  await prisma.plan.update({
+    where: { id: body.planId },
+    data: {
+      generationStatus: "generating_locations",
+      locationTaskId: response.id,
+      lastGeneratedAt: new Date(),
+    },
+  });
 
   // Notify user that task has started (non-blocking)
   notifyTaskProgress("started", "location suggestions");

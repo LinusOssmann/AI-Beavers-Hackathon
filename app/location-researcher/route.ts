@@ -29,6 +29,14 @@ async function createLocationResearch(
     );
   }
 
+  // Check if research is already in progress
+  if (plan.generationStatus === "generating_research") {
+    return NextResponse.json(
+      { error: "Research already in progress" },
+      { status: 409 }
+    );
+  }
+
   const location = await prisma.location.findFirst({
     where: { id: body.locationId, planId: plan.id },
   });
@@ -53,6 +61,16 @@ async function createLocationResearch(
   const activityPrompt = await getActivityPrompt(plan);
   const prompt = [accommodationPrompt, "", activityPrompt].join("\n");
   const response = await createManusAgentTask(prompt);
+
+  // Update plan with research status and task ID
+  await prisma.plan.update({
+    where: { id: body.planId },
+    data: {
+      generationStatus: "generating_research",
+      researchTaskId: response.id,
+      lastGeneratedAt: new Date(),
+    },
+  });
 
   // Notify user that location research has started (non-blocking)
   notifyTaskProgress("started", "destination research");
