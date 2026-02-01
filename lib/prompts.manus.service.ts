@@ -28,7 +28,7 @@ export async function getLocationPrompt(plan: Plan) {
 
   The plan_id to use is ${plan.id}.
 
-  DO NOT create files. It does not matter what you respond in the end as long as you called the tool an appropriate number of times.
+  DO NOT create files. It does not matter what you respond in the end as long as you called the tool an appropriate number of times. Try to not waste too much time on this task.
   `;
 }
 
