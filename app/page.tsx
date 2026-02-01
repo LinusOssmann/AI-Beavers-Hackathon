@@ -59,6 +59,17 @@ export default function LandingPage() {
 							<Link href="/sign-in">Sign In</Link>
 						</Button>
 					</div>
+					<div className="flex flex-col items-center gap-2 pt-6">
+						<span className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+							Powered by
+						</span>
+						<img
+							src="https://upload.wikimedia.org/wikipedia/en/f/f7/Manus_logo.svg"
+							alt="Manus"
+							className="h-6 w-auto"
+							loading="lazy"
+						/>
+					</div>
 				</div>
 
 				{/* Features Grid */}
