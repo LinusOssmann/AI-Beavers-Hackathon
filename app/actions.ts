@@ -30,6 +30,7 @@ interface OnboardingPreferences {
   tripLength?: string;
   companion?: string;
   departureLocation?: string;
+  additionalNotes?: string;
 }
 
 export async function subscribeUser(sub: {
@@ -114,6 +115,7 @@ Budget: ${preferences.budget || "Not specified"}
 Trip Length: ${preferences.tripLength || "Not specified"}
 Traveling With: ${preferences.companion || "Not specified"}
 Departure Location: ${preferences.departureLocation || "Not specified"}
+Additional Notes: ${preferences.additionalNotes || "Not specified"}
   `.trim();
 }
 

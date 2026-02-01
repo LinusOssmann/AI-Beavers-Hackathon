@@ -13,6 +13,7 @@ import { BudgetScreen } from "./screens/budget-screen"
 import { TripLengthScreen } from "./screens/trip-length-screen"
 import { CompanionScreen } from "./screens/companion-screen"
 import { DepartureScreen } from "./screens/departure-screen"
+import { AdditionalInfoScreen } from "./screens/additional-info-screen"
 import { updateUserPreferences, generatePreferenceSummary, savePreferenceSummary } from "@/app/actions"
 
 export interface OnboardingData {
@@ -21,13 +22,14 @@ export interface OnboardingData {
   tripLength: string
   companion: string
   departureLocation: string
+  additionalNotes: string
 }
 
 interface OnboardingFlowProps {
   userId: string
 }
 
-const TOTAL_STEPS = 6
+const TOTAL_STEPS = 7
 
 export function OnboardingFlow({ userId }: OnboardingFlowProps) {
   const router = useRouter()
@@ -41,6 +43,7 @@ export function OnboardingFlow({ userId }: OnboardingFlowProps) {
     tripLength: "",
     companion: "",
     departureLocation: "",
+    additionalNotes: "",
   })
 
   // Poll for summary completion
@@ -176,6 +179,13 @@ export function OnboardingFlow({ userId }: OnboardingFlowProps) {
           <DepartureScreen
             value={data.departureLocation}
             onChange={(location) => updateData({ departureLocation: location })}
+            onNext={handleNext}
+          />
+        )}
+        {step === 6 && (
+          <AdditionalInfoScreen
+            value={data.additionalNotes}
+            onChange={(notes) => updateData({ additionalNotes: notes })}
             onComplete={handleComplete}
             isLoading={isGeneratingSummary}
           />

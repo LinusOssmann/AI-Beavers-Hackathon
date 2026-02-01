@@ -7,11 +7,10 @@ import type { City } from "@/types/city"
 interface DepartureScreenProps {
   value: string
   onChange: (location: string) => void
-  onComplete: () => void
-  isLoading?: boolean
+  onNext: () => void
 }
 
-export function DepartureScreen({ value, onChange, onComplete, isLoading: isSaving = false }: DepartureScreenProps) {
+export function DepartureScreen({ value, onChange, onNext }: DepartureScreenProps) {
   const [isFocused, setIsFocused] = useState(false)
   const [suggestions, setSuggestions] = useState<string[]>([])
   const [isLoadingCities, setIsLoadingCities] = useState(false)
@@ -104,11 +103,11 @@ export function DepartureScreen({ value, onChange, onComplete, isLoading: isSavi
 
       <div className="mt-8">
         <button
-          onClick={onComplete}
-          disabled={!value.trim() || isSaving}
+          onClick={onNext}
+          disabled={!value.trim()}
           className="w-full bg-primary text-primary-foreground py-4 px-6 text-base font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          {isSaving ? 'Saving preferences...' : 'See my travel ideas'}
+          Continue
         </button>
       </div>
     </div>
